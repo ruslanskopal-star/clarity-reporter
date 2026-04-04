@@ -1,91 +1,25 @@
 import { NextResponse } from "next/server";
 
-const KNOWLEDGE_BASE = `
-Jsi expert na CRO (Conversion Rate Optimization) pro e-shopy podle metodologie EshopBooster. 
-Při analýze vždy kontroluj tyto klíčové oblasti a doporučení:
+var KNOWLEDGE_BASE = "Jsi expert na CRO pro e-shopy podle metodologie EshopBooster.\n\nHP:\n- Absence listy USP na HP i across celym e-shopem\n- Chybi viditelny kontakt v hlavicce (tel + email)\n- Recenze na HP co nejvyse, zlate hvezdicky\n- Hello bar - vyrazna barva\n- Rychly rozcestnik kategorii podle prodaju\n- Vyhledavani viditelne na desktopu i mobilu\n- Bannery musi mit CTA tlacitko\n\nKategorie:\n- Poradi produktu podle prodaju, skladem prvni\n- Filtry rozbalene podle dulezitosti\n- Zobrazeni terminu dodani u produktu\n- Stitky: lidovka, zlata stredni cesta, pro narocne\n\nDetail produktu:\n- Reference primo pod nazev produktu\n- Info kdy zbozi dorazi\n- Klic. informace shrnuty bodove\n- FAQ sekce\n- Upsell/cross-sell\n- Box nevite si rady s kontaktem\n\nKosik:\n- Policko slevoveho kodu skryt\n- Apple Pay / Google Pay pridat\n- Termin dodani i v kosiku\n\nObecne:\n- Velikost pisma min 16px\n- Spravny kontrast barev\n- Page Speed - obrazky pod 100kb\n- Kamenna prodejna prezentovat vsude\n";
 
-HP (Hlavní stránka):
-- Absence lišty USP - musí být na HP i napříč celým e-shopem (detail, kategorie)
-- USP musí být proklikávatelné na statické stránky
-- Chybí viditelný kontakt v hlavičce (tel + email + obličej + zelené/červené kolečko dostupnosti)
-- Logo - doplnit dovětek názvu pro jasnou specializaci
-- Recenze na HP co nejvýše, zlaté hvězdičky, ověřené recenze
-- Hello bar - výrazná barva, správný kontrast
-- Rychlý rozcestník kategorií - pořadí podle prodejů
-- Políčko vyhledávání - viditelné na desktopu i mobilu
-- Patička - kontakty, loga Heuréky, platebních metod
-- Bannery musí mít CTA tlačítko a splňovat squint test
-- Max 2 slidery na HP
-- Info menu - oduktů podle prodejů, skladem produkty první
-- Filtry rozbalené a seřazené podle důležitosti
-- Zobrazení termínu dodání u produktů
-- Štítky "lidovka", "zlatá střední cesta", "pro náročné"
-- Hodnocení hvězdičky jen u produktů kde jsou, zlaté barvy
-- Text kategorie využít pro kredibilitu + rozcestník
-
-Detail produktu:
-- Reference přímo pod název produktu
-- Informace kdy zboží dorazí (dnes/zítra/pozítří)
-- Infografika v galerii u TOP produktů
-- Klíčové informace shrnuté bodově
-- FAQ sekce
-- Upsell/cross-sell nabídky
-- Univerzální informace o firmě (recyklova u vás"
-- Box "nevíte si rady" s kontaktem
-
-Košík:
-- Políčko slevového kódu minimalizovat/skrýt
-- Apple Pay / Google Pay přidat
-- Termín dodání i v košíku
-- Upsell při přidání do košíku
-- Možnost platby QR kódem
-
-Mobilní verze:
-- Hamburger menu vpravo
-- Vyhledávání viditelně
-- Správné rozbalení kategorií
-
-Obecně:
-- Velikost písma min 13px, ideálně 16px
-- Správný kontrast barev (WCAG standard)
-- Page Speed - optimalizace obrázků pod 100kb
-- Kamenná prodejna - prezentovat na webq) {
-  const { clientName } = await req.json();
+export async function POST(req) {
+  var body = await req.json();
+  var clientName = body.clientName;
   if (!clientName) return NextResponse.json({ error: "Chybi jmeno" }, { status: 400 });
   try {
-    const Anthropic = (await import("@anthropic-ai/sdk")).default;
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    var Anthropic = (await import("@anthropic-ai/sdk")).default;
+    var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    const message = await anthropic.messages.create({
+    var prompt = KNOWLEDGE_BASE + "\n\nKlient: " + clientName + "\n\nNa zaklade metodologie EshopBooster vytvor detailni CRO analyzu pro e-shop " + clientName + ".\n\nStrukturuj analyzu:\n\nKRITICKE PROBLEMY (resit ihned)\nVYSOKA PRIORITA (resit do mesice)\nSTREDNI PRIORITA (resit do 3 mesicu)\nQUICK WINS (snadne zmeny s velkym dopadem)\n\nPro kazde doporuceni: co chybi, jak opravit, jaky dopad. Celkem 15-20 doporuceni.";
+
+    var message = await anthropic.messages.create({
       model: "claude-opus-4-5",
       max_tokens: 4000,
-      messages: [{
-        role: "user",
-        content: `${KNOWLEDGE_BASE}
-
-Klient: "${clientName}"
-
-Na základě výše uvedené metodologie EshopBooster vytvoř detailní CRO analýzshop "${clientName}".
-
-Strukturuj analýzu takto:
-
-🔴 KRITICKÉ PROBLÉMY (řešit ihned)
-🟠 VYSOKÁ PRIORITA (řešit do měsíce)
-🟡 STŘEDNÍ PRIORITA (řešit do 3 měsíců)
-⚡ QUICK WINS (snadné změny s velkým dopadem)
-
-Pro každé doporučení uveď:
-- Co přesně chybí nebo je špatně
-- Jak to opravit konkrétně
-- Jaký dopad to bude mít na konverze
-
-Zaměř se na: HP, krzi, důvěryhodnost a USP.
-Celkem 15-20 konkrétních doporučení.`
-      }]
+      messages: [{ role: "user", content: prompt }],
     });
 
-    const analysis = message.content[0].type === "text" ? message.content[0].text : "";
-    return NextResponse.json({ success: true, analysis });
+    var analysis = message.content[0].type === "text" ? message.content[0].text : "";
+    return NextResponse.json({ success: true, analysis: analysis });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
