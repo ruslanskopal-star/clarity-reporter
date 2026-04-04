@@ -1,48 +1,47 @@
-'use client'
-import { useState } from 'react'
+"use client";
+import { useState } from "react";
 
 export default function Home() {
-  const [client, setClient] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState('')
+  const [client, setClient] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
-  async function handleSubmit() {
-    if (!client.trim()) return
-    setLoading(true)
-    setStatus('')
+  async function run() {
+    if (!client) return;
+    setLoading(true);
+    setStatus("");
     try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientName: client })
-      })
-      const data = await res.json()
-      setStatus(data.success ? '✅ Odeslano na email!' : '❌ ' + data.error)
+      const r = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientName: client }),
+      });
+      const d = await r.json();
+      setStatus(d.success ? "Odeslano na email!" : "Chyba: " + d.error);
     } catch {
-      setStatus('❌ Chyba')
+      setStatus("Chyba spojeni");
     }
-    setLoading(false)
+    setLoading(false);
   }
 
   return (
-    <main style={{ maxWidth: 500, margin: '100px auto', fontFamily: 'sans-serif', padding: '0 20px' }}>
-      <h1>🔍 Clarity Reporter</h1>
-      <p>Zadej jmeno klienta a spusti se analyza</p>
+    <div style={{ maxWidth: "500px", margin: "80px auto", padding: "20px", fontFamily: "Arial" }}>
+      <h1>Clarity Reporter</h1>
+      <p>Zadej jmeno klienta:</p>
       <input
         value={client}
-        onChange=setClient(e.target.value)}
+        onChange={(e) => setClient(e.target.value)}
         placeholder="napr. Profi-DJ"
-        onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-        style={{ width: '100%', padding: 12, fontSize: 16, marginBottom: 16, boxSizing: 'border-box' }}
+        style={{ width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" }}
       />
       <button
-        onClick={handleSubmit}
+        onClick={run}
         disabled={loading}
-        style={{ width: '100%', padding: 14, fontSize: 16, background: loading ? '#999' : '#0070f3', color: '#fff', border: 'none', cursor: 'pointer' }}
+        style={{ width: "100%", padding: "12px", fontSize: "16px", background: "#0070f3", color: "white", border: "none", cursor: "pointer" }}
       >
-        {loading ? 'Analyzuji...' : 'Spustit analyzu'}
+        {loading ? "Analyzuji..." : "Spustit analyzu"}
       </button>
-      {status && <p style={{ marginTop: 20, padding: 16, background: '#f0f9ff' }}>{status}</p>}
-    </main>
-  )
+      {status && <p style={{ marginTop: "20px", padding: "15px", background: "#f0f9ff" }}>{status}</p>}
+    </div>
+  );
 }
