@@ -16,7 +16,7 @@ HP (Hlavní stránka):
 - Patička - kontakty, loga Heuréky, platebních metod
 - Bannery musí mít CTA tlačítko a splňovat squint test
 - Max 2 slidery na HP
-- Info menu -roduktů podle prodejů, skladem produkty první
+- Info menu - oduktů podle prodejů, skladem produkty první
 - Filtry rozbalené a seřazené podle důležitosti
 - Zobrazení termínu dodání u produktů
 - Štítky "lidovka", "zlatá střední cesta", "pro náročné"
@@ -27,9 +27,10 @@ Detail produktu:
 - Reference přímo pod název produktu
 - Informace kdy zboží dorazí (dnes/zítra/pozítří)
 - Infografika v galerii u TOP produktů
-- Klíčové ll/cross-sell nabídky
-- Univerzální informace o firmě (recyklovat napříč e-shopem)
-- Ukázka "proč nakoupit zrovna u vás"
+- Klíčové informace shrnuté bodově
+- FAQ sekce
+- Upsell/cross-sell nabídky
+- Univerzální informace o firmě (recyklova u vás"
 - Box "nevíte si rady" s kontaktem
 
 Košík:
@@ -48,18 +49,13 @@ Obecně:
 - Velikost písma min 13px, ideálně 16px
 - Správný kontrast barev (WCAG standard)
 - Page Speed - optimalizace obrázků pod 100kb
-- Kamenná prodejna - prezentovat na webu všude
-`;
-
-export async function POST(req) {
+- Kamenná prodejna - prezentovat na webq) {
   const { clientName } = await req.json();
-: "Chybi jmeno" }, { status: 400 });
+  if (!clientName) return NextResponse.json({ error: "Chybi jmeno" }, { status: 400 });
   try {
     const Anthropic = (await import("@anthropic-ai/sdk")).default;
-    const { Resend } = await import("resend");
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    
+
     const message = await anthropic.messages.create({
       model: "claude-opus-4-5",
       max_tokens: 4000,
@@ -69,43 +65,27 @@ export async function POST(req) {
 
 Klient: "${clientName}"
 
-Na základě výše uvedené metodologie EshopBooster vytvoř detailní CRO analýzu pro e-shop "${cl}".
+Na základě výše uvedené metodologie EshopBooster vytvoř detailní CRO analýzshop "${clientName}".
 
 Strukturuj analýzu takto:
 
-1. KRITICKÉ PROBLÉMY (řešit ihned) 🔴
-2. VYSOKÁ PRIORITA (řešit do měsíce) 🟠  
-3. STŘEDNÍ PRIORITA (řešit do 3 měsíců) 🟡
-4. QUICK WINS (snadné změny s velkým dopadem) ⚡
+🔴 KRITICKÉ PROBLÉMY (řešit ihned)
+🟠 VYSOKÁ PRIORITA (řešit do měsíce)
+🟡 STŘEDNÍ PRIORITA (řešit do 3 měsíců)
+⚡ QUICK WINS (snadné změny s velkým dopadem)
 
 Pro každé doporučení uveď:
 - Co přesně chybí nebo je špatně
-- Jak to opravit konkrétn
-Zaměř se na: HP, kategorie, detail produktu, košík, mobilní verzi, důvěryhodnost a USP.
+- Jak to opravit konkrétně
+- Jaký dopad to bude mít na konverze
+
+Zaměř se na: HP, krzi, důvěryhodnost a USP.
 Celkem 15-20 konkrétních doporučení.`
       }]
     });
-    
+
     const analysis = message.content[0].type === "text" ? message.content[0].text : "";
-    
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: "ruslan.skopal@eshopbooster.cz",
-      subject: "CRO Analyza EshopBooster - " + clientName,
-      html: `
-        <div style="font-family: Arial, sans-width: 800px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 10px;">
-            CRO Analyza: ${clientName}
-          </h1>
-          <p style="color: #666; font-size: 14px;">Generovano automaticky podle metodologie EshopBooster</p>
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; white-space: pre-wrap; line-height: 1.6;">
-${analysis}
-          </div>
-        </div>
-      `
-    });
-    
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, analysis });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
