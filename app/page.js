@@ -25,23 +25,18 @@ export default function Home() {
   }
 
   return (
-    <div style={{ maxWidth: "500px", margin: "80px auto", padding: "20px", fontFamily: "Arial" }}>
+    <div style={{ maxWidth: "500px", margin: "80px auto", padding: "20px" }}>
       <h1>Clarity Reporter</h1>
-      <p>Zadej jmeno klienta:</p>
       <input
         value={client}
         onChange={(e) => setClient(e.target.value)}
-        placeholder="napr. Profi-DJ"
-        style={{ width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" }}
+        placeholder="Profi-DJ"
+        style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
       />
-      <button
-        onClick={run}
-        disabled={loading}
-        style={{ width: "100%", padding: "12px", fontSize: "16px", background: "#0070f3", color: "white", border: "none", cursor: "pointer" }}
-      >
+      <button onClick={run} disabled={loading} style={{ width: "100%", padding: "12px" }}>
         {loading ? "Analyzuji..." : "Spustit analyzu"}
       </button>
-      {status && <p style={{ marginTop: "20px", padding: "15px", background: "#f0f9ff" }}>{status}</p>}
+      {status && <p>{status}</p>}
     </div>
   );
 }
