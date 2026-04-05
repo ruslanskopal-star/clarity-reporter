@@ -1,5 +1,19 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+const LOADING_PHASES = [
+  '🔍 Analyzuji první dojem a důvěryhodnost...',
+  '🛍️ Procházím produktové stránky...',
+  '🧭 Kontroluji navigaci a kategorie...',
+  '🛒 Vyhodnocuji košík a checkout...',
+  '⭐ Hledám problémy s trust signály...',
+  '📱 Kontroluji mobilní verzi...',
+  '💰 Analyzuji cenotvorbu a psychologii cen...',
+  '✍️ Hodnotím copywriting a mikrotexty...',
+  '🔎 Prohledávám znalostní bázi KRIS...',
+  '📊 Generuji prioritizovaná doporučení...',
+  '🚀 Finalizuji CRO akční plán...',
+]
 
 function Logo() {
   return (
@@ -14,6 +28,100 @@ function Logo() {
   )
 }
 
+function LoadingAnimation({ seconds, phase }) {
+  return (
+    <div style={{textAlign:'center',padding:'28px 0 8px 0'}}>
+      <style>{`
+        @keyframes pulse-ring {
+          0% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.12); opacity: 0.4; }
+          100% { transform: scale(1); opacity: 0.8; }
+        }
+        @keyframes spin-arc {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes fade-phase {
+          0% { opacity: 0; transform: translateY(6px); }
+          15% { opacity: 1; transform: translateY(0); }
+          85% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-6px); }
+        }
+      `}</style>
+
+      <div style={{position:'relative',display:'inline-block',marginBottom:'20px'}}>
+        <div style={{
+          position:'absolute', top:'-10px', left:'-10px', right:'-10px', bottom:'-10px',
+          borderRadius:'50%',
+          background:'radial-gradient(circle, rgba(255,107,0,0.15) 0%, rgba(255,107,0,0) 70%)',
+          animation:'pulse-ring 2s ease-in-out infinite',
+        }} />
+        <svg width="90" height="90" style={{animation:'spin-arc 1.4s linear infinite',display:'block'}}>
+          <circle cx="45" cy="45" r="38" fill="none" stroke="#2a2a2a" strokeWidth="4"/>
+          <circle cx="45" cy="45" r="38" fill="none" stroke="#FF6B00" strokeWidth="4"
+            strokeDasharray="60 180" strokeLinecap="round"/>
+        </svg>
+        <div style={{
+          position:'absolute', top:'50%', left:'50%',
+          transform:'translate(-50%, -50%)',
+          textAlign:'center', lineHeight:'1',
+        }}>
+          <div style={{fontSize:'22px',fontWeight:'900',color:'#FF6B00',fontFamily:'Arial Black, Arial'}}>
+            {seconds}
+          </div>
+          <div style={{fontSize:'9px',color:'#666',fontFamily:'Arial, sans-serif',fontWeight:'700',letterSpacing:'1px',marginTop:'1px'}}>
+            SEK
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        minHeight:'24px',
+        color:'#aaa',
+        fontSize:'13px',
+        fontFamily:'Arial, sans-serif',
+        fontWeight:'600',
+        letterSpacing:'0.3px',
+        animation:'fade-phase 4s ease-in-out infinite',
+      }}>
+        {phase}
+      </div>
+      <div style={{marginTop:'10px',color:'#444',fontSize:'11px',fontFamily:'Arial, sans-serif'}}>
+        Analýza se zobrazuje průběžně jak AI píše...
+      </div>
+    </div>
+  )
+}
+
+function AnalysisLine({ line }) {
+  const isH1 = line.startsWith('# ')
+  const isH2 = line.startsWith('## ')
+  const displayLine = isH1 ? line.slice(2) : isH2 ? line.slice(3) : line
+
+  const style =
+    line.includes('KRITICKE') || line.includes('KRITICK')
+      ? {color:'#ff4444',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ff4444',paddingLeft:'12px'}
+    : line.includes('VYSOKA')
+      ? {color:'#FF6B00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #FF6B00',paddingLeft:'12px'}
+    : line.includes('STREDNI')
+      ? {color:'#ffcc00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ffcc00',paddingLeft:'12px'}
+    : line.includes('QUICK')
+      ? {color:'#00ccff',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #00ccff',paddingLeft:'12px'}
+    : isH1
+      ? {color:'white',fontWeight:'900',fontSize:'22px',marginTop:'28px',marginBottom:'10px'}
+    : isH2
+      ? {color:'#FF6B00',fontWeight:'700',fontSize:'15px',marginTop:'20px',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px'}
+    : /^\d+\./.test(line)
+      ? {color:'#ddd',marginTop:'12px',paddingLeft:'8px'}
+    : line.startsWith('- ')
+      ? {color:'#aaa',paddingLeft:'20px',marginTop:'4px',fontSize:'14px'}
+    : line.trim() === ''
+      ? {height:'4px'}
+    : {color:'#ccc',marginTop:'6px',fontSize:'15px'}
+
+  return <div style={style}>{displayLine || ' '}</div>
+}
+
 export default function Home() {
   const [clientName, setClientName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,29 +129,94 @@ export default function Home() {
   const [analysis, setAnalysis] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [withClarity, setWithClarity] = useState(true)
+  const [seconds, setSeconds] = useState(0)
+  const [phaseIndex, setPhaseIndex] = useState(0)
+  const timerRef = useRef(null)
+  const phaseRef = useRef(null)
+  const analysisRef = useRef(null)
+
+  useEffect(() => {
+    if (loading) {
+      setSeconds(0)
+      setPhaseIndex(0)
+      timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
+      phaseRef.current = setInterval(() => setPhaseIndex(i => (i + 1) % LOADING_PHASES.length), 4000)
+    } else {
+      clearInterval(timerRef.current)
+      clearInterval(phaseRef.current)
+    }
+    return () => {
+      clearInterval(timerRef.current)
+      clearInterval(phaseRef.current)
+    }
+  }, [loading])
+
+  // Auto-scroll na konec analýzy jak přibývá text
+  useEffect(() => {
+    if (analysis && analysisRef.current) {
+      analysisRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+  }, [analysis])
 
   async function handleAnalyze() {
     if (!clientName) return
     setLoading(true)
     setError('')
     setAnalysis('')
+    setDisplayName(clientName)
+
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({clientName, withClarity})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientName, withClarity }),
       })
-      const data = await res.json()
-      if (data.success) {
-        setDisplayName(clientName)
-        setAnalysis(data.analysis)
-        setClientName('')
-      } else {
-        setError('Chyba: ' + data.error)
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError('Chyba: ' + (data.error || res.statusText))
+        setLoading(false)
+        return
       }
-    } catch {
-      setError('Chyba spojeni')
+
+      // Čteme SSE stream průběžně
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+
+        // Zpracujeme všechny kompletní řádky, poslední neúplný necháme v bufferu
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.error) {
+              setError('Chyba streamu: ' + parsed.error)
+            } else if (parsed.text) {
+              setAnalysis(prev => prev + parsed.text)
+            }
+          } catch {
+            // Ignorujeme neúplné JSON fragmenty
+          }
+        }
+      }
+
+      setClientName('')
+    } catch (e) {
+      setError('Chyba spojení: ' + (e.message || 'Neznámá chyba'))
     }
+
     setLoading(false)
   }
 
@@ -80,12 +253,10 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Clarity toggle */}
           <div
             onClick={() => setWithClarity(v => !v)}
             style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer',userSelect:'none',padding:'10px 14px',borderRadius:'8px',background: withClarity ? '#0d1f0d' : '#1a1a1a',border:`1px solid ${withClarity ? '#2a6b2a' : '#333'}`,transition:'all 0.2s'}}
           >
-            {/* Custom checkbox */}
             <div style={{width:'18px',height:'18px',borderRadius:'4px',border:`2px solid ${withClarity ? '#4CAF50' : '#555'}`,background: withClarity ? '#4CAF50' : 'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 0.2s'}}>
               {withClarity && (
                 <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
@@ -109,11 +280,7 @@ export default function Home() {
             </div>
           )}
 
-          {loading && (
-            <p style={{color:'#666',fontFamily:'Arial, sans-serif',fontSize:'14px',textAlign:'center',marginTop:'16px'}}>
-              AI generuje analyzu, cca 30 sekund...
-            </p>
-          )}
+          {loading && <LoadingAnimation seconds={seconds} phase={LOADING_PHASES[phaseIndex]} />}
         </div>
 
         {analysis && (
@@ -125,34 +292,14 @@ export default function Home() {
               </div>
               <div style={{background:'#FF6B00',borderRadius:'8px',padding:'8px 16px',fontSize:'12px',fontWeight:'700',color:'white',textTransform:'uppercase'}}>ESHOP BOOSTER</div>
             </div>
-
-            <div style={{fontFamily:'Arial, sans-serif',lineHeight:'1.7'}}>
-              {analysis.split('\n').map((line, i) => {
-                const isH1 = line.startsWith('# ')
-                const isH2 = line.startsWith('## ')
-                const displayLine = isH1 ? line.slice(2) : isH2 ? line.slice(3) : line
-                const style =
-                  line.includes('KRITICKE') || line.includes('KRITICK')
-                    ? {color:'#ff4444',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ff4444',paddingLeft:'12px'}
-                  : line.includes('VYSOKA')
-                    ? {color:'#FF6B00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #FF6B00',paddingLeft:'12px'}
-                  : line.includes('STREDNI')
-                    ? {color:'#ffcc00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ffcc00',paddingLeft:'12px'}
-                  : line.includes('QUICK')
-                    ? {color:'#00ccff',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #00ccff',paddingLeft:'12px'}
-                  : isH1
-                    ? {color:'white',fontWeight:'900',fontSize:'22px',marginTop:'28px',marginBottom:'10px'}
-                  : isH2
-                    ? {color:'#FF6B00',fontWeight:'700',fontSize:'15px',marginTop:'20px',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px'}
-                  : /^\d+\./.test(line)
-                    ? {color:'#ddd',marginTop:'12px',paddingLeft:'8px'}
-                  : line.startsWith('- ')
-                    ? {color:'#aaa',paddingLeft:'20px',marginTop:'4px',fontSize:'14px'}
-                  : line.trim() === ''
-                    ? {height:'4px'}
-                  : {color:'#ccc',marginTop:'6px',fontSize:'15px'}
-                return <div key={i} style={style}>{displayLine || ' '}</div>
-              })}
+            <div style={{fontFamily:'Arial, sans-serif',lineHeight:'1.7'}} ref={analysisRef}>
+              {analysis.split('\n').map((line, i) => (
+                <AnalysisLine key={i} line={line} />
+              ))}
+              {/* Blikající kurzor pokud stále streamujeme */}
+              {loading && (
+                <span style={{display:'inline-block',width:'2px',height:'18px',background:'#FF6B00',marginLeft:'4px',animation:'pulse-ring 0.8s ease-in-out infinite',verticalAlign:'middle'}} />
+              )}
             </div>
           </div>
         )}
