@@ -35,7 +35,7 @@ const MAX_HISTORY = 5
 function Logo() {
   return (
     <div style={{display:'inline-block',background:'#111',padding:'10px 22px',borderRadius:'8px',marginBottom:'20px',lineHeight:'1.2'}}>
-      <div style={{display:'flex',alignItems:'center',gap:'0'}}>
+      <div style={{display:'flex',alignItems:'center'}}>
         <span style={{fontSize:'22px',fontWeight:'900',color:'white',fontFamily:'Arial Black, Arial'}}>ESH</span>
         <span style={{fontSize:'22px',fontWeight:'900',color:'#FF6B00',fontFamily:'Arial Black, Arial'}}>O</span>
         <span style={{fontSize:'22px',fontWeight:'900',color:'white',fontFamily:'Arial Black, Arial'}}>P</span>
@@ -93,21 +93,102 @@ function HistoryItem({ item, onOpen, onDelete }) {
         <div style={{color:'#FF6B00',fontWeight:'700',fontSize:'13px',fontFamily:'Arial, sans-serif',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.url}</div>
         <div style={{color:'#444',fontSize:'11px',fontFamily:'Arial, sans-serif',marginTop:'2px'}}>{item.date} &bull; {item.seconds}s</div>
       </div>
-      <button
-        onClick={() => onOpen(item)}
-        style={{padding:'6px 14px',fontSize:'12px',fontWeight:'700',background:'#1a1a1a',border:'1px solid #FF6B00',color:'#FF6B00',borderRadius:'6px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}
-      >
+      <button onClick={() => onOpen(item)} style={{padding:'6px 14px',fontSize:'12px',fontWeight:'700',background:'#1a1a1a',border:'1px solid #FF6B00',color:'#FF6B00',borderRadius:'6px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>
         Otevrit
       </button>
-      <button
-        onClick={() => onDelete(item.id)}
-        style={{padding:'6px 10px',fontSize:'12px',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'6px',cursor:'pointer',flexShrink:0}}
-        title="Smazat"
-      >
+      <button onClick={() => onDelete(item.id)} style={{padding:'6px 10px',fontSize:'12px',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'6px',cursor:'pointer',flexShrink:0}} title="Smazat">
         x
       </button>
     </div>
   )
+}
+
+// Pomocna funkce: zpracuj inline markdown (**bold**, *italic*, `code`)
+function parseInline(text) {
+  const parts = []
+  // Regex: **bold**, *italic*, `code`
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)/g
+  let last = 0
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index))
+    if (match[2] !== undefined) parts.push(<strong key={match.index}>{match[2]}</strong>)
+    else if (match[3] !== undefined) parts.push(<em key={match.index}>{match[3]}</em>)
+    else if (match[4] !== undefined) parts.push(<code key={match.index} style={{background:'#2a2a2a',padding:'1px 5px',borderRadius:'3px',fontSize:'13px',fontFamily:'monospace'}}>{match[4]}</code>)
+    last = match.index + match[0].length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts
+}
+
+function renderAnalysis(text) {
+  return text.split('\n').map((line, i) => {
+    const trimmed = line.trim()
+
+    // Preskoc prazdne oddelovace ---
+    if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
+      return <div key={i} style={{height:'4px'}} />
+    }
+
+    // Prazdny radek
+    if (trimmed === '') return <div key={i} style={{height:'4px'}} />
+
+    // Sekce s barevnym zvyraznenim (KRITICKE, VYSOKA, STREDNI, QUICK, DOPORUCENA)
+    if (trimmed.includes('KRITICKE') || trimmed.includes('KRITICK')) {
+      return <div key={i} style={{color:'#ff4444',fontWeight:'700',fontSize:'17px',marginTop:'28px',marginBottom:'10px',borderLeft:'4px solid #ff4444',paddingLeft:'12px',fontFamily:'Arial Black, Arial'}}>{parseInline(trimmed)}</div>
+    }
+    if (trimmed.includes('VYSOKA')) {
+      return <div key={i} style={{color:'#FF6B00',fontWeight:'700',fontSize:'17px',marginTop:'28px',marginBottom:'10px',borderLeft:'4px solid #FF6B00',paddingLeft:'12px',fontFamily:'Arial Black, Arial'}}>{parseInline(trimmed)}</div>
+    }
+    if (trimmed.includes('STREDNI')) {
+      return <div key={i} style={{color:'#ffcc00',fontWeight:'700',fontSize:'17px',marginTop:'28px',marginBottom:'10px',borderLeft:'4px solid #ffcc00',paddingLeft:'12px',fontFamily:'Arial Black, Arial'}}>{parseInline(trimmed)}</div>
+    }
+    if (trimmed.includes('QUICK')) {
+      return <div key={i} style={{color:'#00ccff',fontWeight:'700',fontSize:'17px',marginTop:'28px',marginBottom:'10px',borderLeft:'4px solid #00ccff',paddingLeft:'12px',fontFamily:'Arial Black, Arial'}}>{parseInline(trimmed)}</div>
+    }
+    if (trimmed.includes('DOPORUCENA') || trimmed.includes('PRIORITIZACE') || trimmed.includes('AKCNI')) {
+      return <div key={i} style={{color:'#aaffaa',fontWeight:'700',fontSize:'17px',marginTop:'28px',marginBottom:'10px',borderLeft:'4px solid #4CAF50',paddingLeft:'12px',fontFamily:'Arial Black, Arial'}}>{parseInline(trimmed)}</div>
+    }
+
+    // H1: # Nadpis
+    if (line.startsWith('# ')) {
+      return <div key={i} style={{color:'white',fontWeight:'900',fontSize:'22px',marginTop:'28px',marginBottom:'10px',fontFamily:'Arial Black, Arial'}}>{parseInline(line.slice(2))}</div>
+    }
+
+    // H2: ## Nadpis
+    if (line.startsWith('## ')) {
+      return <div key={i} style={{color:'#FF6B00',fontWeight:'700',fontSize:'15px',marginTop:'20px',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px',fontFamily:'Arial Black, Arial'}}>{parseInline(line.slice(3))}</div>
+    }
+
+    // H3: ### Nadpis
+    if (line.startsWith('### ')) {
+      return <div key={i} style={{color:'#ccc',fontWeight:'700',fontSize:'14px',marginTop:'16px',marginBottom:'4px',fontFamily:'Arial, sans-serif'}}>{parseInline(line.slice(4))}</div>
+    }
+
+    // Cislovany seznam: 1. text nebo **1. text**
+    if (/^\*?\*?\d+\./.test(trimmed)) {
+      const cleaned = trimmed.replace(/^\*\*(\d+\..+?)\*\*$/, '$1').replace(/^\*\*/, '')
+      return <div key={i} style={{color:'#ddd',marginTop:'14px',paddingLeft:'8px',fontFamily:'Arial, sans-serif',fontWeight:'600'}}>{parseInline(cleaned)}</div>
+    }
+
+    // Bullet: - text nebo * text
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return <div key={i} style={{color:'#aaa',paddingLeft:'20px',marginTop:'5px',fontSize:'14px',fontFamily:'Arial, sans-serif'}}>{parseInline(trimmed.slice(2))}</div>
+    }
+
+    // Odsazeny text (Proc to boli:, Jak opravit:, Dopad: atd.)
+    if (/^(Proc to boli|Jak opravit|Jak na to|Dopad|Clarity signal|Jak overit|Jak overit v Clarity):/.test(trimmed)) {
+      return <div key={i} style={{color:'#888',paddingLeft:'16px',marginTop:'4px',fontSize:'14px',fontFamily:'Arial, sans-serif',fontStyle:'italic'}}>{parseInline(trimmed)}</div>
+    }
+
+    // Tyden/Mesic radky v prioritizaci
+    if (/^\*\*Tyden|^\*\*Mesic|^\*\*Tden/.test(trimmed)) {
+      return <div key={i} style={{color:'#ccc',marginTop:'8px',paddingLeft:'8px',fontFamily:'Arial, sans-serif'}}>{parseInline(trimmed)}</div>
+    }
+
+    // Bezny odstavec
+    return <div key={i} style={{color:'#ccc',marginTop:'6px',fontSize:'15px',fontFamily:'Arial, sans-serif',lineHeight:'1.7'}}>{parseInline(line)}</div>
+  })
 }
 
 export default function Home() {
@@ -121,10 +202,11 @@ export default function Home() {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [history, setHistory] = useState([])
   const [totalSeconds, setTotalSeconds] = useState(null)
+  const [copied, setCopied] = useState(false)
   const timerRef = useRef(null)
   const phaseRef = useRef(null)
+  const analysisRef = useRef(null)
 
-  // Nacist historii z localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem(HISTORY_KEY)
@@ -132,13 +214,12 @@ export default function Home() {
     } catch {}
   }, [])
 
-  // Nacitaci animace
   useEffect(() => {
     if (loading) {
       setSeconds(0)
-      const randomPhaseTime = () => (Math.random() * 7000 + 8000) // 8–15 sekund
       setPhaseIndex(0)
       timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
+      const randomPhaseTime = () => Math.random() * 7000 + 8000
       const rotatePhaseFn = () => {
         setPhaseIndex(i => (i + 1) % LOADING_PHASES.length)
         phaseRef.current = setTimeout(rotatePhaseFn, randomPhaseTime())
@@ -164,17 +245,13 @@ export default function Home() {
     }
     const updated = [newItem, ...history].slice(0, MAX_HISTORY)
     setHistory(updated)
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
-    } catch {}
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)) } catch {}
   }
 
   function deleteFromHistory(id) {
     const updated = history.filter(item => item.id !== id)
     setHistory(updated)
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
-    } catch {}
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)) } catch {}
   }
 
   function openFromHistory(item) {
@@ -207,7 +284,6 @@ export default function Home() {
         return
       }
 
-      // SSE streaming – akumuluj chunky
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let accumulated = ''
@@ -216,23 +292,17 @@ export default function Home() {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
         buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n')
         buffer = lines.pop() || ''
-
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const data = line.slice(6).trim()
           if (data === '[DONE]') continue
           try {
             const parsed = JSON.parse(data)
-            if (parsed.chunk) {
-              accumulated += parsed.chunk
-            }
-            if (parsed.error) {
-              setError('Chyba streamu: ' + parsed.error)
-            }
+            if (parsed.chunk) accumulated += parsed.chunk
+            if (parsed.error) setError('Chyba streamu: ' + parsed.error)
           } catch {}
         }
       }
@@ -246,68 +316,47 @@ export default function Home() {
     } catch (e) {
       setError('Chyba spojeni: ' + e.message)
     }
-
     setLoading(false)
+  }
+
+  function handleCopy() {
+    if (!analysis) return
+    navigator.clipboard.writeText(analysis).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   function handlePrint() {
     window.print()
   }
 
-  function renderAnalysis(text) {
-    return text.split('\n').map((line, i) => {
-      const trimmed = line.trim()
-      const isKriticke = trimmed.includes('KRITICKE') || trimmed.includes('KRITICK')
-      const isVysoka = trimmed.includes('VYSOKA')
-      const isStredni = trimmed.includes('STREDNI')
-      const isQuick = trimmed.includes('QUICK')
-      const isH1 = line.startsWith('# ')
-      const isH2 = line.startsWith('## ')
-      const isNumbered = /^\d+\./.test(trimmed)
-      const isBullet = trimmed.startsWith('- ')
-      const isEmpty = trimmed === ''
-
-      const displayLine = isH1 ? line.slice(2) : isH2 ? line.slice(3) : line
-
-      const style =
-        isKriticke
-          ? { color: '#ff4444', fontWeight: '700', fontSize: '17px', marginTop: '24px', marginBottom: '8px', borderLeft: '4px solid #ff4444', paddingLeft: '12px' }
-        : isVysoka
-          ? { color: '#FF6B00', fontWeight: '700', fontSize: '17px', marginTop: '24px', marginBottom: '8px', borderLeft: '4px solid #FF6B00', paddingLeft: '12px' }
-        : isStredni
-          ? { color: '#ffcc00', fontWeight: '700', fontSize: '17px', marginTop: '24px', marginBottom: '8px', borderLeft: '4px solid #ffcc00', paddingLeft: '12px' }
-        : isQuick
-          ? { color: '#00ccff', fontWeight: '700', fontSize: '17px', marginTop: '24px', marginBottom: '8px', borderLeft: '4px solid #00ccff', paddingLeft: '12px' }
-        : isH1
-          ? { color: 'white', fontWeight: '900', fontSize: '22px', marginTop: '28px', marginBottom: '10px' }
-        : isH2
-          ? { color: '#FF6B00', fontWeight: '700', fontSize: '15px', marginTop: '20px', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }
-        : isNumbered
-          ? { color: '#ddd', marginTop: '12px', paddingLeft: '8px' }
-        : isBullet
-          ? { color: '#aaa', paddingLeft: '20px', marginTop: '4px', fontSize: '14px' }
-        : isEmpty
-          ? { height: '4px' }
-        : { color: '#ccc', marginTop: '6px', fontSize: '15px' }
-
-      return <div key={i} style={style}>{displayLine || ' '}</div>
-    })
+  function handleNovaAnalyza() {
+    setAnalysis('')
+    setDisplayUrl('')
+    setTotalSeconds(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
     <>
       <style>{`
         @media print {
-          body { background: white !important; color: black !important; }
           .no-print { display: none !important; }
-          .print-area { background: white !important; border: none !important; padding: 0 !important; }
-          .print-area * { color: black !important; border-color: #ccc !important; }
-          .section-kriticke { border-left: 4px solid #cc0000 !important; color: #cc0000 !important; }
-          .section-vysoka { border-left: 4px solid #cc4400 !important; color: #cc4400 !important; }
-          .section-stredni { border-left: 4px solid #886600 !important; color: #886600 !important; }
-          .section-quick { border-left: 4px solid #006688 !important; color: #006688 !important; }
-          .print-header { display: flex !important; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #ccc; padding-bottom: 12px; }
-          @page { margin: 20mm; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print-area {
+            background: white !important;
+            border: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+          }
+          .print-area div { color: black !important; }
+          .print-section-kriticke { border-left-color: #cc0000 !important; color: #cc0000 !important; }
+          .print-section-vysoka { border-left-color: #cc4400 !important; color: #cc4400 !important; }
+          .print-section-stredni { border-left-color: #886600 !important; color: #886600 !important; }
+          .print-section-quick { border-left-color: #006688 !important; color: #006688 !important; }
+          .print-section-akcni { border-left-color: #2a6b2a !important; color: #2a6b2a !important; }
+          @page { margin: 18mm; }
         }
       `}</style>
 
@@ -324,7 +373,7 @@ export default function Home() {
           {/* Formular */}
           <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px'}}>
             <p style={{color:'#888',fontSize:'14px',marginTop:'0',marginBottom:'20px',textAlign:'center',fontFamily:'Arial, sans-serif'}}>
-              Zadej web klienta a AI agent KRIS vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
+              Zadej web klienta a AI agent vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
             </p>
 
             <div style={{display:'flex',gap:'12px',marginBottom:'16px'}}>
@@ -384,12 +433,7 @@ export default function Home() {
                 Posledni analyzy
               </div>
               {history.map(item => (
-                <HistoryItem
-                  key={item.id}
-                  item={item}
-                  onOpen={openFromHistory}
-                  onDelete={deleteFromHistory}
-                />
+                <HistoryItem key={item.id} item={item} onOpen={openFromHistory} onDelete={deleteFromHistory} />
               ))}
             </div>
           )}
@@ -398,10 +442,20 @@ export default function Home() {
           {analysis && (
             <div className="print-area" style={{background:'#1a1a1a',border:'2px solid #333',borderRadius:'16px',padding:'32px'}}>
 
+              {/* Tlacitko Nova analyza NAHORE */}
+              <div className="no-print" style={{display:'flex',justifyContent:'flex-end',marginBottom:'16px'}}>
+                <button
+                  onClick={handleNovaAnalyza}
+                  style={{padding:'8px 16px',fontSize:'12px',fontWeight:'700',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'8px',cursor:'pointer'}}
+                >
+                  Nova analyza
+                </button>
+              </div>
+
               {/* Report header */}
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px',paddingBottom:'16px',borderBottom:'2px solid #333'}}>
                 <div>
-                  <div style={{color:'#FF6B00',fontSize:'12px',fontWeight:'700',letterSpacing:'3px',textTransform:'uppercase',marginBottom:'4px'}}>KRIS CRO Analyza</div>
+                  <div style={{color:'#FF6B00',fontSize:'12px',fontWeight:'700',letterSpacing:'3px',textTransform:'uppercase',marginBottom:'4px'}}>AI CRO Analyza</div>
                   <div style={{color:'white',fontSize:'22px',fontWeight:'900'}}>{displayUrl}</div>
                   {totalSeconds && (
                     <div style={{color:'#555',fontSize:'12px',fontFamily:'Arial, sans-serif',marginTop:'4px'}}>
@@ -411,18 +465,25 @@ export default function Home() {
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:'8px',alignItems:'flex-end'}}>
                   <div style={{background:'#FF6B00',borderRadius:'8px',padding:'8px 16px',fontSize:'12px',fontWeight:'700',color:'white',textTransform:'uppercase'}}>ESHOP BOOSTER</div>
-                  <button
-                    className="no-print"
-                    onClick={handlePrint}
-                    style={{padding:'8px 16px',fontSize:'12px',fontWeight:'700',background:'#1a1a1a',border:'1px solid #555',color:'#aaa',borderRadius:'8px',cursor:'pointer',textTransform:'uppercase',letterSpacing:'1px'}}
-                  >
-                    Stahnout PDF
-                  </button>
+                  <div className="no-print" style={{display:'flex',gap:'8px'}}>
+                    <button
+                      onClick={handleCopy}
+                      style={{padding:'8px 14px',fontSize:'12px',fontWeight:'700',background:copied?'#1a3a1a':'#1a1a1a',border:`1px solid ${copied?'#4CAF50':'#555'}`,color:copied?'#4CAF50':'#aaa',borderRadius:'8px',cursor:'pointer',textTransform:'uppercase',letterSpacing:'1px',transition:'all 0.2s'}}
+                    >
+                      {copied ? 'Skopirovano!' : 'Kopirovat'}
+                    </button>
+                    <button
+                      onClick={handlePrint}
+                      style={{padding:'8px 14px',fontSize:'12px',fontWeight:'700',background:'#1a1a1a',border:'1px solid #555',color:'#aaa',borderRadius:'8px',cursor:'pointer',textTransform:'uppercase',letterSpacing:'1px'}}
+                    >
+                      PDF
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Obsah analyzy */}
-              <div style={{fontFamily:'Arial, sans-serif',lineHeight:'1.7'}}>
+              <div ref={analysisRef} style={{fontFamily:'Arial, sans-serif',lineHeight:'1.7'}}>
                 {renderAnalysis(analysis)}
               </div>
 
@@ -433,7 +494,7 @@ export default function Home() {
                 </div>
                 <button
                   className="no-print"
-                  onClick={() => { setAnalysis(''); setDisplayUrl(''); setTotalSeconds(null); }}
+                  onClick={handleNovaAnalyza}
                   style={{padding:'8px 16px',fontSize:'12px',fontWeight:'700',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'8px',cursor:'pointer'}}
                 >
                   Nova analyza
