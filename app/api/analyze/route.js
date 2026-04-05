@@ -1,358 +1,252 @@
+// route_v6_edge_v5.js
+// Zmeny oproti v4: URL input misto clientName, rozsirena Clarity sekce v knowledge base
+
 export const runtime = 'edge'
 
-// ============================================================
-// KRIS - Knowledge-based Report Intelligence System
-// Engine postaveny na metodologii ESHOP BOOSTER
-// Verze 6.0 edge v4 - streaming SSE + no-dash rule
-// ============================================================
-
 const KRIS_KNOWLEDGE_BASE = `
-# KRIS ZNALOSTNI BAZE v4 - ESHOP BOOSTER + ILINCEV METODOLOGIE
+# KRIS ZNALOSTNI BAZE v5
+
+## MICROSOFT CLARITY – JAK CIST DATA PRO CRO ANALYZU
+
+### Heatmapy
+- Click heatmapy odhaluji kde uzivatele klikaji na neaktivni prvky (dead clicks) – okamzita priorita opravy
+- Scroll heatmapy presne ukazuji kde uzivatele prestali scrollovat – obsah pod touto casti je prakticky neviditelny
+- Pokud scroll depth na produktove strance nepresahuje 50 %, je problem s prvni obrazovkou nebo nacitanim
+- Area heatmapy ukazuji kde uzivatele travi cas pohledem – porovnej s idealnim F-pattern nebo Z-pattern
+- Pokud je CTR hlavniho CTA tlacitka pod 2 %, testuj text, barvu nebo pozici
+
+### Rage Clicks
+- Rage click = uzivatel klikne 3x a vice rychle za sebou na stejne misto – signal frustrace a konfuze
+- Nejcastejsi priciny: neaktivni tlacitko, prvek ktery VYPADA klikatelne ale neni, pomaly JavaScript
+- Top 3 stranky s nejvyssi miru rage clicks jsou nejvyssi priority pro redesign
+- Rage clicks na checkout strance primo zpusobuji opusteni kosiku – resit okamzite
+- Rage clicks na filtry signalizuji problem s UX filtrovani nebo rychlosti odezvy
+- Jak reportovat: "Na strance X je rage click rate Y %, klikani na prvek Z – doporucuji deaktivovat nebo pridat akci"
+
+### Dead Clicks
+- Dead click = klik na prvek bez reakce – uzivatel ocekava akci ale nedostane ji
+- Typicke problemy: dekorativni texty vypadajici jako odkazy, produktove obrazky bez zoomu, ikonky bez funkce
+- Pokud vice nez 5 % kliknuti na dany prvek jsou dead clicks, nutny redesign nebo pridani funkce
+- Produktove obrazky bez zoom funkce jsou masivni zdroj dead clicks
+
+### Session Recordings
+- Analyzuj relace s nejvyssim cas na strance ale nizkou konverzi – co konkretne brani dokonceni?
+- Filtruj nahravky kde uzivatel navstivil kosik ale nenakoupil – identifikuj pricinu opusteni
+- Sleduj "rage sessions" (vice nez 5 rage clicks v jedne relaci) – nejcennejsi zpetna vazba
+- Porovnej nahravky desktop vs. mobil – chovani se vychylne lisi
+- Hledej vzory: na kterem konkretnim poli formulare uzivatel prestal?
+
+### Scroll Depth
+- Scroll depth pod 30 % = vazny problem s prvni obrazovkou
+- Scroll depth 30 az 60 % = prumerny vysledek, testuj usporadani obsahu
+- Scroll depth nad 70 % = dobry engagement, umisti sem CTA tlacitko
+- Na kategoriove strance: scroll depth ktery nepresahne listing = filtry nefunguji
+- Na blogu: scroll depth pod 50 % = titulek slibil vic nez obsah dodal
+
+### Konverzni Trychtyre v Clarity
+- Nastav trychtyr: Homepage, Kategorie, Produkt, Kosik, Objednavka, Dekujeme
+- Nejvyssi odpad v trychtyr = nejvetsi konverzni bariery
+- Odpad mezi Produkt a Kosik nad 70 % = problem s cenou, duverou nebo chybejicimi informacemi
+- Odpad pri checkoutu nad 60 % = problem s formularem, dopravou nebo platebnimi metodami
+- Porovnavej trychtyre: mobil vs. desktop, organika vs. placena navsteva
+
+### JavaScript Chyby
+- Clarity zaznamenava JS chyby – zkontroluj stranky s vysokou miru opakujicich se chyb
+- JS chyba na checkout strance = prime opusteni – absolutni priorita
+- Chyby ve formulari = uzivatel nemuze dokoncit akci
+
+### Doporuceny Postup CRO s Clarity Daty
+1. Identifikuj top 5 stranek s nejvyssim odpadem v trychtyr
+2. Pro kazdu stranku zkontroluj scroll depth, rage clicks, dead clicks a session recordings
+3. Formuluj hypotezy: "Uzivatele nescrolluji pod produkt – pricina je neatraktivni prvni obrazovka"
+4. Navrhni konkretni reseni s prioritou
+5. Po implementaci sleduj zmenu chovani v Clarity
+
+### Jak Prezentovat Clarity Data Klientovi
+- Vzdycky uved konkretni cisla: "Rage click rate na tlacitku Koupit je 18 %, prumerne to byva pod 3 %"
+- Pripoj screenshot heatmapy nebo timestamp konkretni session recording
+- Preved data na penize: "Pokud opravime rage click na checkoutu, odhadujeme zvyseni konverze o 0,3 az 0,5 %"
+- Prioritizuj podle dopadu na konverzi, ne podle vizualni atraktivity problemu
 
 ## PRVNI DOJEM A DUVERYHODNOST
-- Navstevnik si udela prvni dojem za 0,1 sekundy - vizualni kvalita webu primo ovlivnuje vnimanou duveryhodnost
-- Halo efekt: krasny web = lepsi produkt v mysli zakaznika, i kdyz to neni pravda
-- Nejdulezitejsi trust signaly: recenze, fotky realnych zakazniku, certifikaty, media ve kterych se e-shop objevil
-- "Above the fold" musi okamzite komunikovat: co prodavate, proc u vas, a vyzvu k akci
-- Social proof "above the fold": pocet zakazniku, hodnoceni, loga medii/partneru
+- Navstevnik si udela prvni dojem za 0,1 sekundy
+- Halo efekt: krasny web = lepsi produkt v mysli zakaznika
+- Nejdulezitejsi trust signaly: recenze, fotky realnych zakazniku, certifikaty, media
+- Above the fold musi komunikovat: co prodavate, proc u vas, a vyzvu k akci
 
-## OHYB STRANKY (The Fold) - KRITICKA ZONA
-- Google studie inzeratu: nad ohybem je obsah viditelny v 68 % pripadu, pod ohybem jen ve 40 %
-- Nielsen Norman: prumerny rozdil v pozornosti nad vs. pod ohybem = 84 % ve prospech obsahu nad ohybem
+## OHYB STRANKY (The Fold)
+- Google studie: nad ohybem je obsah videt v 68 % pripadu, pod ohybem jen 40 %
+- Nielsen Norman: rozdil pozornosti nad vs. pod ohybem = 84 %
 - Nejlepsi pozice CTA: tesne nad ohybem nebo primo v prvni obrazovce
-- Uzivatele skroluji POUZE pokud je obsah prvni obrazovky dostatecne motivujici
-- Kazda druha polovina inzeratu na internetu nebude nikdy nikym spatrena (spatne umisteni)
-- Plati pro vsechna zarizeni - velikost ohybu se lisi, princip zustava stejny
+- Uzivatele scrolluji POUZE pokud je obsah prvni obrazovky dostatecne motivujici
 
-## SLIDER NA HOMEPAGE - PROC NEFUNGUJE
-- Banner blindness: lidi ignoruji vse co se hyba nebo pripomina reklamu - slider dela oboje najednou
-- Kobercovy nalet sdeleni: misto jednoho silneho sdeleni bombardujete zakaznika vice nekonkretnimi sdelenimi
-- Zpomaluje nacitani a odvadi pozornost od konverze
-- Reseni: staticky hero banner s JEDNOU silnou nabidkou a JEDNOU vyzvou k akci
-- Pokud musite mit slider: personalizujte - 1. az 2. navsteva = prurez sortimentem + vyhody; 3.+ = oblibene kategorie + akce
+## SLIDER NA HOMEPAGE
+- Banner blindness: lidi ignoruji vse co se hybne nebo pripomina reklamu
+- Kobercovy nalet sdeleni: misto jednoho silneho sdeleni bombardujete vice nekonkretnimi
+- Reseni: staticke hero s JEDNOU silnou nabidkou a JEDNOU vyzvou k akci
 
 ## SLOGAN A POSITIONING
-- 90 % sloganu jsou prazdne fraze: "Vase spokojenost je nasi prioritou", "Kvalita, ktere verite"
-- Dobry slogan rika CO delate pro KOHO a PROC je to jine - ne jak se citite jako firma
-- Test: zakryjte logo a dejte slogan konkurenci - pokud pasuje, slogan nic nerika
+- 90 % sloganu jsou prazdne fraze: "Vase spokojenost je nasi prioritou"
+- Test: zakryjte logo a dejte slogan konkurenci – pokud pasuje, slogan nic nerika
 - Misto sloganu testujte konkretni value proposition: "Dorucime do 24h nebo vratime penize"
-- 3 otazky pro dobry slogan: Pro koho? Co presne? Proc zrovna my?
-
-## KONKURENCNI VYHODA A DIFERENCIACE
-- Vetsina firem tvrdi totez: kvalita, servis, cena - to neni diferenciace
-- Skutecna diferenciace: specializace na niku, rychlost, komunita, udrzitelnost, garance
-- Konkurovat pouze cenou je sebevrazda - vzdy prijde nekdo levnejsi (Cina, Amazon)
-- Brand funguje jako placebo - stejny produkt s lepsim brandem zakaznici vnimaji jako kvalitnejsi
-- AirBnB efekt: stejne bile layouty, stejne sans-serif fonty - weby jsou zamennitelne a neviditelne
-- Bezpecny design = prumerny design = neviditelny design; zamerně porusto jednu konvenci
-
-## PSYCHOLOGIE STATUSU V NAKUPECH
-- Temer kazdy nakup ma slozku statusu - co o mne rika to, co kupuji?
-- Luxusni zbozi: zakaznik nekupuje produkt, kupuje status a prislusnost ke skupine
-- Cena jako signal kvality: prilis nizka cena u premioveho produktu snizuje vnimanou hodnotu
-- Veblenuv efekt: u luxusniho zbozi vyssi cena = vyssi poptavka (opak bezneho trhu)
-- Premiove baleni, limitovane edice, exkluzivni pristup, personalizace zvysuji vnimany status
-
-## LUXUS A PREMIOVE E-SHOPY
-- Premiove znacky: NIKDY plosne slevy (poskozuji brand), radeji limitovane edice a exkluzivni nabidky
-- Fotografie: vzdy lifestyle, vzdy nejvyssi kvalita, detail materialu a remesla (craftsmanship)
-- Copywriting luxusu: smyslovy jazyk, pribeh produktu, puvod materialu
-- Zakaznicka pece u luxusu: osobni pristup je nutnost, ne bonus
-- Veblenuv efekt: neslevujte premiove produkty - cena je soucasti hodnoty
-
-## PSYCHOLOGIE DARKU A VANOCE
-- Obdarovany si vazi darku prumerne jen na 82 % jeho skutecne ceny (studie)
-- Penezni darky a poukazy maji nejnizsi vnimanou hodnotu - i kdyz jsou prakticky nejflexibilnejsi
-- Produkty s pribehem (odkud pochazi, jak vznikly) maji vyssi vnimanou hodnotu
-- Pro e-shopy: darkove baleni, pruvodci text na prani, moznost skryti ceny = zvysuji konverzi
-- Vanoce: zakaznici jsou ochotni platit vice a nakupuji impulzivne
-- Deadlines doruceni (posledni termin objednani pred Vanoci) = silny konverzni element
 
 ## PRODUKTOVE STRANKY A FOTOGRAFIE
-- 75 % zakazniku povazuje fotky za klicove pri rozhodovani o koupi (Weebly)
-- 58 % zakazniku chce videt produkt ze vsech stran - minimum jsou 3 az 5 fotek
-- Kazdy 5. zakaznik vrati produkt, protoze fotka neodpovidala realite
-- Lifestyle fotky (produkt v kontextu) vyrazne zvysuji konverze u obleceni, doplnku, nabytku
-- Zoom funkce na produktovych fotkach je nutnost
-- Video produktu zvysuje konverze az o 80 % u komplexnejsich produktu
-- Popis produktu: zakaznici nectou, skenují. Bullet pointy > odstavce. Nejdulezitejsi info prvni.
-- Dostupnost skladem musi byt jasne viditelna (zelena = skladem, cervena = vyprodano)
-
-## VYPRODANE PRODUKTY - SPRAVNY POSTUP
-- Docasne nedostupny produkt bez alternativy = 99 % uzivatelu odchazi ke konkurenci okamzite
-- Tlacitko "Pridat do kosiku" ktere nic nedela = NEJHORSI mozny stav - vzdy ho deaktivujte nebo skryjte
-- Vite kdy naskladnite: dejte moznost objednat s delsi dodaci lhutou NEBO formular "Hlidaci pes"
-- Nevite kdy: nabidnete alternativni produkty, presmerujte, dejte "Hlidaci pes - posleme e-mail"
-- Trvale vyprodane produkty: NESMAZAVEJTE stranku (SEO hodnota), presmerujte na alternativy
-- Specificka velikost/varianta neni skladem: upozorneni jen pro danou variantu, ostatni zustanou dostupne
+- 75 % zakazniku povazuje fotky za klicove pri rozhodovani
+- 58 % zakazniku chce videt produkt ze vsech stran – minimum jsou 3 az 5 fotek
+- Lifestyle fotky vyrazne zvysuji konverze u obleceni, doplnku, nabytku
+- Video produktu zvysuje konverze az o 80 % u slozitejsich produktu
+- Dostupnost skladem musi byt jasne viditelna
 
 ## NAVIGACE A KATEGORIE
-- Hamburger menu na desktopu je chyba - skryva navigaci a snizuje konverze
-- Do 10 polozek: horizontalni navigace; 10+ polozek: vertikalni navigace vlevo (vzor: Alza - 20 kategorii)
-- Uzivatele travi pohledem 80 % casu na leve casti obrazovky
-- Drobeckova navigace: lokacni (kde jste) a atributova (aktivni filtry)
-- Interni vyhledavani: zakaznici kteri vyhledavaji konvertuji 2 az 3x lepe nez ti co browsuji
+- Hamburger menu na desktopu je chyba – skryva navigaci a snizuje konverze
+- Do 10 polozek: horizontalni navigace; 10 a vice polozek: vertikalni vlevo
+- Interni vyhledavani: zakaznici kteri vyhledavaji konvertuji 2 az 3x lepe
 
-## INTERNI VYHLEDAVANI NA E-SHOPU
-- Zakaznici kteri pouziji vyhledavani konvertuji 2 az 3x lepe - prioritizujte tuto funkci
-- Autocomplete/suggest: zobrazujte nejen texty ale i produkty s obrazkem primo v naseptavaci
-- Nulove vysledky = promarnena prilezitost: nabidnete alternativy, podobne produkty, kontakt
-- Sledujte co zakaznici vyhledavaji = zlaty dul pro merchandising a sortiment
-- Preklepy a synonyma: vyhledavac musi rozumet "tricko" i "tricko", "iphone" i "iPhone"
+## VYPRODANE PRODUKTY
+- Neaktivni tlacitko bez vysvetleni = nejhorsi mozny stav
+- Nabidni alternativni produkty nebo Hlidaci pes – posleme e-mail
+- Trvale vyprodane produkty: NESMAZAVEJ stranku (SEO hodnota), presmeruj na alternativy
 
-## MEGA MENU - 10 PRAVIDEL
-- Maximalne 3 urovne; 4. uroven resejte uvnitr stranek kategorii
-- Musi se vejit na jednu obrazovku - co se nevejde, odstrante
-- Kazda kategorie musi byt klikaci (ne jen rozcestnik)
-- Ikony kategorii pomahaji orientaci a rychlosti skenovani
-- Card sorting s realnyumi uzivateli: nechte zakazniky sesekupit produkty dle vlastni logiky (OptimalSort)
-- Tree testing: 30 uzivatelu, 10 otazek - overi zda zakaznici najdou co hledaji
-- Pouzivejte slovnik zakazniku, ne interni terminologii firmy
-
-## DROPDOWN MENU - LEPSI ALTERNATIVY
-- Dropdown skryva moznosti = zvysuje kognitivni zatez
-- Lepsi alternativy pro 2 az 5 moznosti: radio buttony, segmented control, karty/dlazidce
-- Pro 6+ moznosti: vyhledavani s autocomplete > dropdown
-- Vyber pohlavi: nikdy dropdown - radio buttony nebo karty
-- Vyber roku narozeni: prime textove pole (type="number")
-
-## IKONY - PRAVIDLA POUZITI
-- Ikony bez popisku jsou hazard - uzivatele je neznaji tak jak si myslime
-- Vyjimky (funguji i bez textu): lupa, kosik, hamburger menu, hvezdicka, domek
-- Ikony s popiskem vzdy > ikony bez popisku
-- Testujte zda uzivatele ikonu spravne identifikuji: staci 5 uzivatelu
-
-## A/B TESTOVANI - KDY, JAK, KOLIK VYDELA
-- Mene nez 1 000 konverzi/mesic = A/B testovani nema smysl; iterujte bez testovani
-- Prumerne ROI A/B testovani: 223 % (dle dostupnych studii)
-- Nejcastejsi prvni test: barva CTA tlacitka - je to plyvani; testujte radeji nadpisy a layout
-- Statisticka signifikance min. 95 %, idealne 99 %
-- Testujte vzdy jen jednu hypotezu s jasnnym duvodem
-- Nejlepsi veci k testovani (sestupne): nadpis/headline, text CTA, cena dopravy, poradi produktu
-
-## A/A TESTOVANI - PRED KAZDYM A/B TESTEM
-- A/A test = testujete dve identicke verze stranky - zadna zmena obsahu
-- Overite: spravnou implementaci nastroje, miru sumu v datech, absenci bias
-- Pomaha nastavit minimalni detekovatelny efekt (MDE) pro nasledne A/B testy
-- Provedte A/A test pred prvnim A/B testem a prubezne pri zmene nastroje
-
-## MIKROTEXTY A UX COPYWRITING - KONKRETNI CISLA
-- Zmena 3 slov v nadpisu = +10 % obratu (dokumentovany pripad z praxe)
-- Veeam: "Request a quote" zmena na "Request pricing" = +161,66 % prokliku na CTA
-- Google ubytovani: "Book a room" zmena na "Check availability" = +17 % engagement
-- Chybove hlassky: konkretni + pratelske + napomocene ("Zadejte e-mail ve formatu jmeno@email.cz")
-- Prazdne stavy jsou konverzni prilezitost - nabidnete alternativu, ne jen "Nic jsme nenasli"
-- Tlacitko musi rikat co se stane po kliknuti: "Ziskat nabidku zdarma" > "Odeslat"
-- Headline na landing page je nejdulezitejsi element - testujte jako prvni
-
-## POP-UPY - CO FUNGUJE A CO NE (analyza 2 miliard pop-upu)
-- Top 10 % pop-upu nabizeji neco uzitecneho a relevantniho ke konkretni strance
-- Dokumentovane konverze lead magnet pop-upu: sablony e-mailu = 61 %; srovnani kosiku = 47 %
-- Newsletter pop-up: zobrazujte az po precteni alespon 50 % clanku
-- Exit intent pop-up: posledni sance pro nabidku dopravy zdarma nebo slevy
-- Podminky dobreho pop-upu: spravny timing + relevantni obsah + snadne zavreni + hodnotna nabidka
-
-## VYCITKY PO NAKUPU (Buyer's Remorse)
-- Buyer's remorse = prirozeny jev, ktery lze aktivne omezit post-purchase komunikaci
-- 14 dni na vraceni: komunikujte jako silnou vyhodu, ne jen jako pravni povinnost
-- Jak omezit: potvrzovaci e-mail "Udelali jste skvele rozhodnuti", social proof i po nakupu, snadne vraceni
-- Cim starsi zakaznik, tim vice vycitke - potrebuji vice ujisteni
-
-## ZDRAZENI - JAK KOMUNIKOVAT A NEPRIJIT O ZAKAZNIKY
-- Nikdy neoznamujte zdrazeni az na fakture (pripad Hotjar: +400 % bez upozorneni = hromadny odliv)
-- 5 legitimnich duvodu ke zdrazeni: zlepseni produktu, nikdo se nehada o cenu, vyrazne ROI pro klienty, 3 az 12 mesicu od posledniho zdrazeni, zaporna rentabilita
-- Bezpecna mira zdrazeni: do 10 az 15 %
-- Oznameni: dopredu s vysvetlenim a moznosti prepay za stare ceny
-
-## LEAD MAGNET A CONTENT UPGRADE
-- Lead magnet = hodnotny obsah zdarma vymenou za e-mail; funguje 2 az 4x lepe nez pouhy formular
-- Content upgrade k danemu clanku konvertuje 2 az 4x lepe nez obecny lead magnet
-- Nejlepsi formaty: checklisty, sablony, srovnavaci tabulky, kalkulacky, pruvodci
-
-## LOAJALITA ZAKAZNIKU - CO OPRAVDU FUNGUJE
-- Nadsenni zakaznici nejsou rovni lojalnim zakaznikum
-- Slevy NEbudují loajalitu - pritahuji cenove citlive zakazniky zavisle na slevach
-- Loajalitu buduje: konzistentni zkusenost, rychle reseni problemu, komunita, sdilene hodnoty
-- NPS: sledujte trend v case, ne jen absolutni cislo
-- United Airlines pripad: jeden negativni viralni zazitke = ztrata 180M USD trzni hodnoty
-
-## STRANKA "O NAS"
-- 3. az 5. nejnavstevovanejsi stranka e-shopu - ignorovat ji je strategicka chyba
-- Musi obsahovat: proc firma existuje, pribeh zakladatele s fotkou, tym, hodnoty, kontakt
-- Pribeh zakladatele zvysuje duveryhodnost a emocionalni vazbu
-- Budte lidsti, konkretni a autenticti
-
-## CHECKOUT A OBJEDNAVKOVY PROCES (analyza 200 e-shopu)
-- Zasilkovna vede (9 500 vydejnich mist); Ceska posta klesa kvalitou
-- Doporuceni: 3 dopravci na adresu + 2 na vydejny; sjednotte vydejni mista do jedne polozky s mapou (dela to jen 10 %)
-- Ceny dopravy: prumer 96 Kc na adresu, 70 Kc vydejni misto. Doporuceni: 99 Kc / 69 Kc
-- Datum doruceni: zobrazujte u kazde dopravy - dela to jen polovina e-shopu
-- Doprava zdarma od hranice: nabizi 75 % e-shopu, median je 1 500 Kc
-- Vzorec pro hranici dopravy zdarma: AOV + (cena dopravy / marze). Priklad: 1 250 + (69 / 0,3) = 1 480 Kc
-- KRITICKA CHYBA: neptejte se na dorucovaci adresu pri osobnim odberu (54 % e-shopu to dela)
-- Pamatujte si vyplnene udaje (56 % e-shopu si to nepamatuje)
-- Registraci navrhujte az na dekovaci strance - staci se zeptat na heslo (dela to jen 15 % e-shopu)
-- Minimalizujte pocet poli ve formulari - kazde extra pole snizuje konverze
-- U dobirky uvette "lze platit hotove i kartou" (70 % e-shopu tuto info nema)
-
-## PRISTUPNOST A TESTOVANI UX
-- Od cervna 2025 povinna pristupnost pro e-shopy nad urcitou velikost (EU zakon)
-- Minimalni velikost dotykove plochy na mobilu: 7 x 7 mm s 2mm rozestupy
-- Kontrastni pomer textu: minimalne 4,5:1 pro normalni text, 3:1 pro velky text
-- Formulare: labely musi byt viditelne - ne jen placeholder ktery zmizi pri psani
-- 5 uzivatelu odhali 85 % UX problemu (Jakob Nielsen)
-
-## UZIVATELSKY VYZKUM - JAK SE SPRAVNE PTAT
-- Vetsina UX vyzkumu je znehodnocena sugestivnimi otazkami
-- Spatna otazka: "Libi se vam nas novy design?" - zakaznik rekne ano ze slusnosti
-- Spravna otazka: "Popiste mi, jak byste postupovali pri hledani produktu X" - behavioralni, otevrena
-- Ptejte se na minule chovani, ne na hypotetice budouci ("Koupili byste to?" je bezcenne)
-- 5 uzivatelu odhali 85 % UX problemu - nepotrebujete velky vzorek
-
-## REGISTRACE A PRIHLASOVANI
-- Registrace pri objednavce = konverzni killer; nabizejte nakup bez registrace vzdy
-- Guest checkout je nutnost - zakaznik se zaregistruje sam pokud bude chtet
-- Registraci navrhujte az na dekovaci strance (1 pole: "Ulozit vase udaje? Zadejte heslo:")
-- Socialni login (Google, Facebook) = mene treni, vice konverzi
-
-## PRUMERNA HODNOTA OBJEDNAVKY (AOV)
-- Zvysovat AOV: upsell/cross-sell, balicky, mnozstevni slevy, doplnkove sluzby
-- Hranici dopravy zdarma nastavte mirne nad prumernou AOV - zakaznik si prilozi produkt
-- POZOR: agresivni slevy zvysuji AOV, ale snizuji marzi - sledujte marzi na objednavku, ne jen AOV
+## KOSIK A CHECKOUT
+- Zasilkovna vede (9 500 vydejnich mist)
+- Datum doruceni: zobrazuj u kazde dopravy – dela to jen polovina e-shopu
+- KRITICKA CHYBA: neptejte se na dorucovaci adresu pri osobnim odberu
+- Registraci navrhujte az na dekovaci strance
+- Minimalizuj pocet poli – kazde extra pole snizuje konverze
 
 ## RECENZE A SOCIALNI DUKAZ
-- Recenze jsou nejsilnejsi trust signal - 92 % zakazniku cte recenze pred nakupem
-- Perfektni 5.0 je podezrele - optimum je 4,2 az 4,7
+- 92 % zakazniku cte recenze pred nakupem
+- Perfektni 5.0 je podezrele – optimum je 4,2 az 4,7
 - Recenze s fotkami konvertuji 2x lepe nez textove
-- Odpovídejte na negativni recenze verejne
-- Pod 10 recenzi zakaznici neduvěruji; 50+ je solidni zaklad
-- Recenze zadejte e-mailem 7 az 14 dni po doruceni = nejvyssi response rate
+- Pod 10 recenzi zakaznici neveruji; 50 a vice je solidni zaklad
 
-## CENOTVORBA A PSYCHOLOGIE CEN (EU regulace 2023)
-- EU regulace: zobrazujte nejnizsi cenu za poslednich 30 dni jako referencni
-- Psychologicke ceny: 999 Kc > 1 000 Kc; zaokrouhlene ceny = signal luxusu
-- Kotevni cena: nejdrazsi varianta vlevo meni vnimani ostatnich cen
-- Prilis velka sleva snizuje vnimanou kvalitu produktu
-
-## PRIPADOVKA: TRENYRKARNA - 4x OBRAT ZA 6 LET
-- Filtry serazeny podle skutecne pouzivnosti (MS Clarity): Velikost, Znacka, Barva
-- Pouzite filtry viditelne na zacatku vypisu + tlacitko "Zrusit vse"
-- Barvy jako barevne puntiky (ne text)
-- Pamatovani vybrane velikosti z filtru do detailu produktu
+## CENOTVORBA A PSYCHOLOGIE CEN
+- EU regulace 2023: zobrazuj nejnizsi cenu za poslednich 30 dni jako referencni
+- Psychologicke ceny: 999 Kc je lepsi nez 1 000 Kc
+- Kotvici cena: nejdrazsi varianta vlevo meni vnimani ostatnich cen
 
 ## MOBILNI VERZE
-- Více nez 60 % navstevniku e-shopu prichazi z mobilu, ale jen 30 % tam nakoupi
-- Tlacitka: minimalni 44x44 px, dostatecne mezery
-- Sticky kosik / CTA tlacitko vyrazne zvysuje konverze
+- Vice nez 60 % navstevniku prichazi z mobilu, ale jen 30 % tam nakoupi
 - Kazda sekunda navic pri nacitani = 7 % pokles konverzi
 - Thumb zone: nejdulezitejsi akce do spodni casti obrazovky
+- Sticky kosik nebo CTA tlacitko vyrazne zvysuje mobilni konverze
 
-## EMAILOVY MARKETING A RETENCE
-- Ziskat noveho zakaznika stoji 5 az 7x vice nez udrzet stavajiciho
-- Opusteny kosik: serie 3 e-mailu (1h, 24h, 72h) - prumerna konverze 5 az 15 %
+## A/B TESTOVANI
+- Mene nez 1 000 konverzi za mesic = A/B testovani nema smysl
+- Nejlepsi veci k testovani: nadpis, text CTA, cena dopravy, poradi produktu
+- Statisticka signifikance minimalne 95 %
+
+## EMAILOVY MARKETING
+- Opusteny kosik: serie 3 e-mailu (1h, 24h, 72h) – prumerna konverze 5 az 15 %
 - Personalizace predmetu (jmeno zakaznika) zvysuje open rate o 26 %
+- Ziskat noveho zakaznika stoji 5 az 7x vice nez udrzet stavajiciho
 
-## DARK PATTERNS - CEHO SE VYVAROVAT
+## DARK PATTERNS
 - Skryte poplatky v poslednim kroku = nejcastejsi duvod opusteni kosiku
-- Predvybrane souhlasy s newsletterem nebo pojistenim jsou v EU nelegalni
-- Falešna urgence poskozuje brand dlouhodobe
+- Predvybrane souhlasy s newsletterem jsou v EU ilegalni
+- Falsna urgence poskozuje brand dlouhodobe
 
-## AI A AUTOMATIZACE V E-COMMERCE
-- AI personalizace doporuceni zvysuje AOV prumerne o 10 az 30 %
-- Chatboty: funguji pro FAQ, selhavaji u komplexnich problemu
-- Automatizace e-mailovych sekvenci = nejvyssi ROI z automation
+## PRISTUPNOST (EU zakon od cervna 2025)
+- Od cervna 2025 povinna pristupnost pro e-shopy nad urcitou velikost
+- Minimalni velikost dotykove plochy: 7x7 mm s 2mm rozestupy
+- Kontrastni pomer textu: minimalne 4,5:1 pro normalni text
+- Formulare: labely musi byt viditelne, ne jen placeholder ktery zmizi pri psani
 `
 
 export async function POST(req) {
-  const { clientName, withClarity } = await req.json()
+  try {
+    const { clientUrl, withClarity } = await req.json()
 
-  if (!clientName) {
-    return new Response(JSON.stringify({ success: false, error: 'Chybi nazev klienta' }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
+    if (!clientUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Chybi URL klienta' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    return new Response(JSON.stringify({ success: false, error: 'API klic neni nastaven' }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: 'API klic neni nastaven' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
-  const clarityInstruction = withClarity
-    ? 'Klient MA pristup do Microsoft Clarity - zahrnuj doporuceni tykajici se heatmap, nahravek sessions a analyzy chovani uzivatelu.'
-    : 'Klient NEMA pristup do Microsoft Clarity - analyza bude postavena pouze na best practices bez dat z Clarity.'
+    const clarityInstruction = withClarity
+      ? `Klient MA pristup do Microsoft Clarity. V analyze zahrn konkretni doporuceni jak vyuzit data z Clarity (heatmapy, rage clicks, dead clicks, session recordings, scroll depth) pro overeni a prioritizaci tvych doporuceni. U kazde kriticke nebo vysoke priority uved jak ji overit v Clarity datech.`
+      : `Klient NEMA pristup do Microsoft Clarity. Analyzu postav na best practices a obecnych vzorech v dane kategorii. Doporuc zavedeni Clarity jako quick win pro dalsi optimalizaci.`
 
-  const systemPrompt = `Jsi KRIS - Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
+    const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
 
-Tvá znalostni baze:
+Tvoje znalostni baze:
 ${KRIS_KNOWLEDGE_BASE}
 
-PRAVIDLA FORMATOVANI VYSTUPU:
-- NIKDY nepouzivej dlouhou pomlcku ani kratkou pomlcku jako oddelovac vety
-- Pokud potrebujes vyjadrit rozsah nebo oddelit mysleni, pis slovy: "az", "nebo", "a take"
-- Nepouzivej pomlcky v nadpisech ani v sekci titulech
-- Preferuj dvojtecku nebo zavorky misto pomlcek
-
-TVOJE ULOHA: Analyzuj e-shop klienta a vytvor strukturovanou CRO analyzu. Pis v cestine, konkretne a akcionovatelne.
+TVOJE ULOHA: Analyzuj e-shop klienta na zaklade jeho URL a vytvor strukturovanou CRO analyzu. Pis v cestine, konkretne a akcionovatelne. Kazde doporuceni musi byt specificke pro dany e-shop a jeho kategorii produktu, ne obecne.
 
 ${clarityInstruction}
 
-POVINNA STRUKTURA ANALYZY:
+DULEZITE PRAVIDLO – NO DASH RULE: Ve svem vystupu NIKDY nepouzivej pomlcky (znak minus nebo pomlcku) jako oddelovace nebo dekoraci. Misto nich pouzivej dvojtecku, tecku nebo novy radek.
 
-KRITICKE PRIORITY: [nazev sekce]
+POVINNÁ STRUKTURA ANALYZY (pouzivej presne tato klicova slova pro spravne zobrazeni):
+
+KRITICKE PRIORITY
 1. [konkretni problem s dopadem na konverze]
-   - Proc to boli: [vysvetleni]
-   - Jak opravit: [konkretni reseni]
+   Proc to boli: [vysvetleni]
+   Jak opravit: [konkretni reseni]
+   ${withClarity ? 'Jak overit v Clarity: [kde se podivat v Clarity]' : ''}
 
-VYSOKA PRIORITA: [nazev sekce]
+VYSOKA PRIORITA
 1. [doporuceni]
-   - Dopad: [odhad dopadu]
-   - Jak na to: [konkretni kroky]
+   Dopad: [odhad dopadu]
+   Jak na to: [konkretni kroky]
+   ${withClarity ? 'Clarity signal: [co hledat v datech]' : ''}
 
-STREDNI PRIORITA: [nazev sekce]
+STREDNI PRIORITA
 1. [doporuceni]
-   - Jak na to: [kroky]
+   Jak na to: [kroky]
 
-QUICK WINS: Rychle vyhry (do 1 tydne)
+QUICK WINS (do 1 tydne)
 1. [co jde udelat rychle a levne]
 
-Analyzuj: homepage a prvni dojem, produktove stranky, navigaci, kosik a checkout, trust signaly, mobilni verzi, ceny, copywriting.`
+Analyzuj tyto oblasti: homepage a prvni dojem, produktove stranky a fotografie, navigace a kategorie, kosik a checkout, trust signaly a recenze, mobilni verze, cenotvorba a slevy, copywriting a mikrotexty.
 
-  const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8000,
-      stream: true,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `Priprav kompletni KRIS CRO analyzu pro e-shop: ${clientName}
+Bud konkretni: pojmenuj konkretni prvky webu, uved konkretni cisla a kroky. Analyza musi byt primo pouzitelna jako akcni plan pro klienta.`
 
-Bud konkretni - jmenuj konkretni prvky webu, konkretni cisla, konkretni kroky. Analyza musi byt primo pouzitelna jako akcni plan.`,
-        },
-      ],
-    }),
-  })
+    const userMessage = `Priprav kompletni KRIS CRO analyzu pro e-shop: ${clientUrl}
 
-  if (!anthropicResponse.ok) {
-    const err = await anthropicResponse.text()
-    return new Response(JSON.stringify({ success: false, error: 'Chyba API: ' + err }), {
-      headers: { 'Content-Type': 'application/json' }
+Zhodnocuji web podle URL a kategorie produktu. Zamer se na nejcastejsi konverzni problemy v dane kategorii. Bud konkretni, pojmenuj konkretni prvky webu, uved konkretni cisla a kroky. Analyza musi byt primo pouzitelna jako akcni plan.`
+
+    // Streaming SSE response – obchazi 30s Edge timeout
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
     })
-  }
 
-  // Stream SSE - drzi spojeni otevrene po celou dobu generovani
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream({
-    async start(controller) {
+    if (!anthropicResponse.ok) {
+      const err = await anthropicResponse.text()
+      return new Response(
+        JSON.stringify({ error: 'Chyba Anthropic API: ' + err }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Prenaset SSE stream primo klientovi
+    const { readable, writable } = new TransformStream()
+    const writer = writable.getWriter()
+    const encoder = new TextEncoder()
+
+    ;(async () => {
       const reader = anthropicResponse.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
@@ -364,36 +258,50 @@ Bud konkretni - jmenuj konkretni prvky webu, konkretni cisla, konkretni kroky. A
 
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
-          buffer = lines.pop()
+          buffer = lines.pop() || ''
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim()
-              if (data === '[DONE]') continue
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-                  const chunk = `data: ${JSON.stringify({ text: parsed.delta.text })}\n\n`
-                  controller.enqueue(encoder.encode(chunk))
-                }
-                if (parsed.type === 'message_stop') {
-                  controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-                }
-              } catch {}
+            if (!line.startsWith('data: ')) continue
+            const data = line.slice(6).trim()
+            if (data === '[DONE]') continue
+
+            try {
+              const parsed = JSON.parse(data)
+              if (
+                parsed.type === 'content_block_delta' &&
+                parsed.delta?.type === 'text_delta'
+              ) {
+                const chunk = parsed.delta.text
+                await writer.write(
+                  encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`)
+                )
+              }
+            } catch {
+              // ignoruj nevalidni JSON radky
             }
           }
         }
+        await writer.write(encoder.encode('data: [DONE]\n\n'))
+      } catch (err) {
+        await writer.write(
+          encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`)
+        )
       } finally {
-        controller.close()
+        await writer.close()
       }
-    }
-  })
+    })()
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    }
-  })
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ error: e.message || 'Neznama chyba' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
 }
