@@ -1,5 +1,5 @@
 'use client'
-// page_v11.js - dynamicky nazev PDF, oprava print CSS, nazev stranky CRO Report
+// page_v12.js - oprava sanitizeDashes unicode, bezpecne String.fromCharCode
 import { useState, useEffect, useRef } from 'react'
 
 const LOADING_PHASES = [
@@ -123,11 +123,12 @@ function parseInline(text) {
 }
 
 function sanitizeDashes(text) {
-  // Nahrad en dash a em dash pouzite jako oddelovac za dvojtecku
+  // Nahrad en dash (\u2013) a em dash (\u2014) za dvojtecku
+  var enDash = String.fromCharCode(8211) // –
+  var emDash = String.fromCharCode(8212) // —
   return text
-    .replace(/ – /g, ': ')   // en dash " – " → ": "
-    .replace(/ — /g, ': ')   // em dash " — " → ": "
-    .replace(/ - /g, ' ')         // bezna pomlcka jako oddelovac → mezera
+    .split(' ' + enDash + ' ').join(': ')
+    .split(' ' + emDash + ' ').join(': ')
 }
 
 function renderAnalysis(text) {
