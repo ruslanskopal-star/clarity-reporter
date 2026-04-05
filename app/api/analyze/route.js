@@ -371,14 +371,18 @@ CELKOVY POTENCIAL
 Oblast | Odhadovany dopad
 [tabulka, vzdy 2 sloupce, 5-8 radku]
 
-CLARITY CHECKLIST
-TATO SEKCE MUSI BYT VZDY POSLEDNI SEKCI ANALYZY. Povinnych 5 polozek, kazda na samostatnem radku, format: "[cislo]. [Kde kliknout v Clarity] → [Co presne hledat a co to znamena]"
-Priklad: "1. Heatmapa homepage → zkontroluj zda uzivatele scrolluji k USP liste pod foldem; pokud ne, USP neni viditelna"
-1.
-2.
-3.
-4.
-5.
+---
+## CLARITY CHECKLIST
+
+TATO SEKCE MUSI BYT VZDY POSLEDNI SEKCI ANALYZY. Prave 5 polozek, kazda specificka pro TENTO e-shop a jeho kategorii — NIKDY genericka. Format: "[cislo]. [Kde presne v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]"
+Priklad SPRAVNE polozky: "1. Heatmapa stranky /kosik → zkontroluj % uzivatelu kteri scrolluji pod seznam polozek; pokud mene nez 60 % vidi tlacitko Objednat, presun ho vys."
+Priklad SPATNE polozky: "1. Zkontroluj heatmapy webu." — TOTO JE ZAKAZANE.
+
+1. [Kde v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]
+2. [Kde v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]
+3. [Kde v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]
+4. [Kde v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]
+5. [Kde v Clarity kliknout] → [Co konkretne hledat a jak to interpretovat]
 `
 
     const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
