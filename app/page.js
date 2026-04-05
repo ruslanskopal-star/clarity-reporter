@@ -3,16 +3,18 @@ import { useState } from "react";
 
 function EshopBoosterLogo() {
   return (
-    <svg width="160" height="56" viewBox="0 0 160 56" xmlns="http://www.w3.org/2000/svg">
-      <rect width="160" height="56" rx="6" fill="white"/>
-      <text x="12" y="26" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="22" fill="#111" letterSpacing="1">ESH</text>
-      <g transform="translate(71, 6)">
-        <ellipse cx="11" cy="12" rx="11" ry="12" fill="#111"/>
-        <ellipse cx="11" cy="12" rx="7" ry="8" fill="white"/>
-        <polygon points="11,4 7,10 15,10" fill="#111"/>
+    <svg width="180" height="60" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg">
+      <rect width="180" height="60" rx="6" fill="white"/>
+      <!-- ESHOP text -->
+      <text x="10" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">ESH</text>
+      <!-- O symbol - zaobleny obdelnik s sipkou -->
+      <g transform="translate(72, 4)">
+        <rect x="0" y="0" width="22" height="28" rx="7" ry="7" fill="#111"/>
+        <path d="M11,3 L16,10 L13.5,10 L13.5,22 Q13.5,25 11,25 Q8.5,25 8.5,22 L8.5,10 L6,10 Z" fill="white"/>
       </g>
-      <text x="93" y="26" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="22" fill="#111" letterSpacing="1">P</text>
-      <text x="12" y="48" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="16" fill="#111" letterSpacing="3">BOOSTER</text>
+      <text x="97" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">P</text>
+      <!-- BOOSTER text -->
+      <text x="10" y="50" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="17" fill="#111" letterSpacing="3">BOOSTER</text>
     </svg>
   );
 }
