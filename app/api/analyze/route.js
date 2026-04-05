@@ -1,5 +1,5 @@
-// route_v6_edge_v7.js
-// Zmeny oproti v6: silnejsi NO DASH RULE s prikladem SPATNE/SPRAVNE
+// route_v6_edge_v8.js
+// Zmeny oproti v7: injektovani realneho data do system promptu
 
 export const runtime = 'edge'
 
@@ -176,6 +176,8 @@ export async function POST(req) {
       ? `Klient MA pristup do Microsoft Clarity. V analyze zahrn konkretni doporuceni jak vyuzit data z Clarity (heatmapy, rage clicks, dead clicks, session recordings, scroll depth) pro overeni a prioritizaci tvych doporuceni. U kazde kriticke nebo vysoke priority uved jak ji overit v Clarity datech.`
       : `Klient NEMA pristup do Microsoft Clarity. Analyzu postav na best practices a obecnych vzorech v dane kategorii. Doporuc zavedeni Clarity jako quick win pro dalsi optimalizaci.`
 
+    const dateInstruction = `Dnesni datum je ${dateStr}. Pokud ve sve analyze uvadis datum analyzy, pouzij VZDY toto datum. Nikdy nepouzivej jine datum.`
+
     const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
 
 Tvoje znalostni baze:
@@ -184,6 +186,8 @@ ${KRIS_KNOWLEDGE_BASE}
 TVOJE ULOHA: Analyzuj e-shop klienta na zaklade jeho URL a vytvor strukturovanou CRO analyzu. Pis v cestine, konkretne a akcionovatelne. Kazde doporuceni musi byt specificke pro dany e-shop a jeho kategorii produktu, ne obecne.
 
 ${clarityInstruction}
+
+${dateInstruction}
 
 DULEZITE PRAVIDLO 1 – NO DASH RULE (ABSOLUTNI ZAKAZ): Ve svem vystupu NIKDY nepouzivej znak pomlcky jako oddelovac nebo dekoraci. Konkretne zakazane znaky: en dash (–), em dash (—), a pomlcka pouzita jako oddelovac v textu. Jedina vyjimka: pomlcka uvnitr slova (e-shop, self-service). Misto oddelovacu pouzivej VZDY dvojtecku nebo novy radek. Priklad SPATNE: "Analyza – vysledky – doporuceni". Priklad SPRAVNE: "Analyza: vysledky: doporuceni". Toto pravidlo je absolutni a nema vyjimky.
 
@@ -213,6 +217,9 @@ QUICK WINS (do 1 tydne)
 Analyzuj tyto oblasti: homepage a prvni dojem, produktove stranky a fotografie, navigace a kategorie, kosik a checkout, trust signaly a recenze, mobilni verze, cenotvorba a slevy, copywriting a mikrotexty.
 
 Bud konkretni: pojmenuj konkretni prvky webu, uved konkretni cisla a kroky. Analyza musi byt primo pouzitelna jako akcni plan pro klienta.`
+
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
 
     const userMessage = `Priprav kompletni KRIS CRO analyzu pro e-shop: ${clientUrl}
 

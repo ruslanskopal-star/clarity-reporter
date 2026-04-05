@@ -1,5 +1,5 @@
 'use client'
-// page_v10.js - oprava use client directive
+// page_v11.js - dynamicky nazev PDF, oprava print CSS, nazev stranky CRO Report
 import { useState, useEffect, useRef } from 'react'
 
 const LOADING_PHASES = [
@@ -338,7 +338,13 @@ export default function Home() {
   }
 
   function handlePrint() {
+    const now = new Date()
+    const hh = String(now.getHours()).padStart(2, '0')
+    const mm = String(now.getMinutes()).padStart(2, '0')
+    const originalTitle = document.title
+    document.title = `CRO Report - ${displayUrl} - ${hh}:${mm}`
     window.print()
+    document.title = originalTitle
   }
 
   function handleNovaAnalyza() {
@@ -353,20 +359,27 @@ export default function Home() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          body > div {
+            background: white !important;
+            padding: 0 !important;
+          }
           .print-area {
             background: white !important;
             border: none !important;
             padding: 0 !important;
             border-radius: 0 !important;
+            box-shadow: none !important;
           }
           .print-area div { color: black !important; }
-          .print-section-kriticke { border-left-color: #cc0000 !important; color: #cc0000 !important; }
-          .print-section-vysoka { border-left-color: #cc4400 !important; color: #cc4400 !important; }
-          .print-section-stredni { border-left-color: #886600 !important; color: #886600 !important; }
-          .print-section-quick { border-left-color: #006688 !important; color: #006688 !important; }
-          .print-section-akcni { border-left-color: #2a6b2a !important; color: #2a6b2a !important; }
-          @page { margin: 18mm; }
+          .print-area div[style*="border-left"] { border-left-width: 4px !important; border-left-style: solid !important; }
+          @page { margin: 15mm; size: A4; }
         }
       `}</style>
 
