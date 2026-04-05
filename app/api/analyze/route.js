@@ -626,7 +626,7 @@ const KRIS_KNOWLEDGE_BASE = `
 
 export async function POST(req) {
   try {
-    const { clientName } = await req.json()
+    const { clientName, withClarity = true } = await req.json()
 
     if (!clientName) {
       return NextResponse.json({ success: false, error: 'Chybí jméno klienta' })

@@ -20,6 +20,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [analysis, setAnalysis] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [withClarity, setWithClarity] = useState(true)
 
   async function handleAnalyze() {
     if (!clientName) return
@@ -30,7 +31,7 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({clientName})
+        body: JSON.stringify({clientName, withClarity})
       })
       const data = await res.json()
       if (data.success) {
@@ -49,7 +50,6 @@ export default function Home() {
   return (
     <div style={{minHeight:'100vh',background:'#111',fontFamily:'Arial Black, Arial, sans-serif',padding:'20px'}}>
       <div style={{maxWidth:'800px',margin:'0 auto',paddingTop:'40px'}}>
-
         <div style={{textAlign:'center',marginBottom:'40px'}}>
           <Logo />
           <h1 style={{fontSize:'32px',fontWeight:'900',color:'white',margin:'0 0 6px 0',textTransform:'uppercase'}}>CRO Analyza</h1>
@@ -60,7 +60,8 @@ export default function Home() {
           <p style={{color:'#888',fontSize:'14px',marginTop:'0',marginBottom:'20px',textAlign:'center',fontFamily:'Arial, sans-serif'}}>
             Zadej jmeno klienta a AI vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
           </p>
-          <div style={{display:'flex',gap:'12px'}}>
+
+          <div style={{display:'flex',gap:'12px',marginBottom:'16px'}}>
             <input
               value={clientName}
               onChange={e => setClientName(e.target.value)}
@@ -78,6 +79,30 @@ export default function Home() {
               {loading ? 'Analyzuji...' : 'Spustit'}
             </button>
           </div>
+
+          {/* Clarity toggle */}
+          <div
+            onClick={() => setWithClarity(v => !v)}
+            style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer',userSelect:'none',padding:'10px 14px',borderRadius:'8px',background: withClarity ? '#0d1f0d' : '#1a1a1a',border:`1px solid ${withClarity ? '#2a6b2a' : '#333'}`,transition:'all 0.2s'}}
+          >
+            {/* Custom checkbox */}
+            <div style={{width:'18px',height:'18px',borderRadius:'4px',border:`2px solid ${withClarity ? '#4CAF50' : '#555'}`,background: withClarity ? '#4CAF50' : 'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 0.2s'}}>
+              {withClarity && (
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+            <div>
+              <div style={{color: withClarity ? '#4CAF50' : '#666',fontSize:'13px',fontWeight:'700',fontFamily:'Arial, sans-serif',letterSpacing:'0.5px'}}>
+                {withClarity ? '✓ Mám přístup do Microsoft Clarity' : 'Nemám přístup do Microsoft Clarity'}
+              </div>
+              <div style={{color:'#555',fontSize:'11px',fontFamily:'Arial, sans-serif',marginTop:'2px'}}>
+                {withClarity ? 'Analýza bude zahrnovat heatmapy, nahrávky a chování uživatelů' : 'Analýza bude postavena na best practices bez dat z Clarity'}
+              </div>
+            </div>
+          </div>
+
           {error && (
             <div style={{marginTop:'16px',padding:'14px',background:'#2a0a0a',border:'2px solid #aa0000',borderRadius:'8px',color:'#ff4444',fontSize:'14px',fontFamily:'Arial, sans-serif'}}>
               {error}
@@ -104,19 +129,19 @@ export default function Home() {
                 <div key={i} style={
                   line.includes('KRITICKE') || line.includes('KRITICK')
                     ? {color:'#ff4444',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ff4444',paddingLeft:'12px'}
-                    : line.includes('VYSOKA')
+                  : line.includes('VYSOKA')
                     ? {color:'#FF6B00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #FF6B00',paddingLeft:'12px'}
-                    : line.includes('STREDNI')
+                  : line.includes('STREDNI')
                     ? {color:'#ffcc00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ffcc00',paddingLeft:'12px'}
-                    : line.includes('QUICK')
+                  : line.includes('QUICK')
                     ? {color:'#00ccff',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #00ccff',paddingLeft:'12px'}
-                    : /^\d+\./.test(line)
+                  : /^\d+\./.test(line)
                     ? {color:'#ddd',marginTop:'12px',paddingLeft:'8px'}
-                    : line.startsWith('- ')
+                  : line.startsWith('- ')
                     ? {color:'#aaa',paddingLeft:'20px',marginTop:'4px',fontSize:'14px'}
-                    : line.trim() === ''
+                  : line.trim() === ''
                     ? {height:'4px'}
-                    : {color:'#ccc',marginTop:'6px',fontSize:'15px'}
+                  : {color:'#ccc',marginTop:'6px',fontSize:'15px'}
                 }>
                   {line || ' '}
                 </div>
