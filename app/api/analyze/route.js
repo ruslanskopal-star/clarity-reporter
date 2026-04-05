@@ -1,5 +1,10 @@
-// route_v6_edge_v9.js
-// Zmeny oproti v8: oprava TDZ - dateStr definovan pred dateInstruction
+// route_v6_edge_v10.js
+// Zmeny oproti v9:
+// - Fetch meta dat stranky (title, description, H1) pred analyzou
+// - Nova sekce SKORE E-SHOPU (0-100) s hodnocenim oblasti
+// - Nova sekce CO DELA DOBRE (silne stranky e-shopu)
+// - Vylepseny system prompt: konkretnejsi, akcionovatejnejsi
+// - Lepsi struktura reportu pro klienta
 
 export const runtime = 'edge'
 
@@ -153,6 +158,72 @@ const KRIS_KNOWLEDGE_BASE = `
 - Formulare: labely musi byt viditelne, ne jen placeholder ktery zmizi pri psani
 `
 
+// Pomocna funkce: fetch meta dat ze stranky klienta
+async function fetchPageMeta(url) {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CROBot/1.0; +https://cro-report.vercel.app)',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'cs,en;q=0.9',
+      },
+    })
+    clearTimeout(timeout)
+
+    if (!response.ok) return null
+
+    const html = await response.text()
+
+    // Extrakce title
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+    const title = titleMatch ? titleMatch[1].trim().replace(/\s+/g, ' ') : null
+
+    // Extrakce meta description
+    const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
+    const description = descMatch ? descMatch[1].trim().replace(/\s+/g, ' ') : null
+
+    // Extrakce prvniho H1
+    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+    const h1 = h1Match ? h1Match[1].trim().replace(/\s+/g, ' ') : null
+
+    // Extrakce og:title pro zalohu
+    const ogTitleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)
+    const ogTitle = ogTitleMatch ? ogTitleMatch[1].trim() : null
+
+    // Extrakce og:description pro zalohu
+    const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)
+    const ogDesc = ogDescMatch ? ogDescMatch[1].trim() : null
+
+    // Zjisti pocet H2 (proxy pro strukturu obsahu)
+    const h2Count = (html.match(/<h2[^>]*>/gi) || []).length
+
+    // Zjisti zda ma structured data (schema.org)
+    const hasSchema = /application\/ld\+json/i.test(html)
+
+    // Zjisti zda ma canonical
+    const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)
+    const canonical = canonicalMatch ? canonicalMatch[1].trim() : null
+
+    return {
+      title: title || ogTitle,
+      description: description || ogDesc,
+      h1,
+      h2Count,
+      hasSchema,
+      canonical,
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function POST(req) {
   try {
     const { clientUrl, withClarity } = await req.json()
@@ -172,13 +243,30 @@ export async function POST(req) {
       )
     }
 
+    // Fetch meta dat stranky (nezablokovani – pokud selze, analyzujeme bez nich)
+    const pageMeta = await fetchPageMeta(clientUrl)
+
+    // Sestav meta kontext pro prompt
+    let metaContext = ''
+    if (pageMeta) {
+      metaContext = `\nREALNA DATA ZISKANA ZE STRANKY KLIENTA (pouzij v analyze):\n`
+      if (pageMeta.title) metaContext += `- Title stranky: "${pageMeta.title}"\n`
+      if (pageMeta.description) metaContext += `- Meta description: "${pageMeta.description}"\n`
+      if (pageMeta.h1) metaContext += `- Hlavni nadpis (H1): "${pageMeta.h1}"\n`
+      if (pageMeta.h2Count !== undefined) metaContext += `- Pocet H2 nadpisu: ${pageMeta.h2Count}\n`
+      if (pageMeta.hasSchema !== undefined) metaContext += `- Structured data (schema.org): ${pageMeta.hasSchema ? 'ANO' : 'NE'}\n`
+      if (pageMeta.canonical) metaContext += `- Canonical URL: ${pageMeta.canonical}\n`
+      metaContext += `Tyto udaje jsou realne ziskane z webu. Komentuj je primo v analyze – napriklad zda title a description jsou relevantni, zda H1 obsahuje keyword, zda meta description motivuje ke kliknuti.\n`
+    } else {
+      metaContext = `\nMeta data stranky se nepodarilo nacist (web mohl blokovat fetch nebo je nedostupny). Analyzu postav na zaklade URL a kategorie produktu.\n`
+    }
+
     const clarityInstruction = withClarity
       ? `Klient MA pristup do Microsoft Clarity. V analyze zahrn konkretni doporuceni jak vyuzit data z Clarity (heatmapy, rage clicks, dead clicks, session recordings, scroll depth) pro overeni a prioritizaci tvych doporuceni. U kazde kriticke nebo vysoke priority uved jak ji overit v Clarity datech.`
       : `Klient NEMA pristup do Microsoft Clarity. Analyzu postav na best practices a obecnych vzorech v dane kategorii. Doporuc zavedeni Clarity jako quick win pro dalsi optimalizaci.`
 
     const now = new Date()
     const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
-
     const dateInstruction = `Dnesni datum je ${dateStr}. Pokud ve sve analyze uvadis datum analyzy, pouzij VZDY toto datum. Nikdy nepouzivej jine datum.`
 
     const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
@@ -188,6 +276,8 @@ ${KRIS_KNOWLEDGE_BASE}
 
 TVOJE ULOHA: Analyzuj e-shop klienta na zaklade jeho URL a vytvor strukturovanou CRO analyzu. Pis v cestine, konkretne a akcionovatelne. Kazde doporuceni musi byt specificke pro dany e-shop a jeho kategorii produktu, ne obecne.
 
+${metaContext}
+
 ${clarityInstruction}
 
 ${dateInstruction}
@@ -196,28 +286,55 @@ DULEZITE PRAVIDLO 1 – NO DASH RULE (ABSOLUTNI ZAKAZ): Ve svem vystupu NIKDY ne
 
 DULEZITE PRAVIDLO 2 – NO VERSION FOOTER: Na konci analyzy NIKDY nepridavej radky s verzi, nazvem systemu ani zkratkami jako "KRIS v5", "KRIS analyza", "ESHOP BOOSTER metodologie v5" apod. Footer s autorstvim je reseny zvlast na urovni UI.
 
-POVINNÁ STRUKTURA ANALYZY (pouzivej presne tato klicova slova pro spravne zobrazeni):
+DULEZITE PRAVIDLO 3 – KONKRETNOST: Kazde doporuceni musi obsahovat:
+a) PRESNY POPIS problemu (ne "tlacitko je spatne" ale "tlacitko Pridat do kosiku na produktove strance nema dostatecny vizualni kontrast a spliva s pozadim")
+b) KONKRETNI RESENI s kroky (ne "zleps checkout" ale "Odstrante krok s registraci, nahradte ho Guest checkout s jednim e-mailem")
+c) OCEKAVANY DOPAD v % nebo Kc kdyz je to mozne
+
+POVINNÁ STRUKTURA ANALYZY (pouzivej presne tato klicova slova pro spravne zobrazeni v reportu):
+
+SKORE E-SHOPU
+[Cele cislo 0-100 reprezentujici celkove CRO skore]
+Hodnoceni oblasti (kazda na nove radce, format "Oblast: X/10"):
+Prvni dojem a duveryhodnost: X/10
+Produktove stranky: X/10
+Navigace a vyhledavani: X/10
+Kosik a checkout: X/10
+Mobilni verze: X/10
+Trust signaly a recenze: X/10
+Cenotvorba: X/10
+Copywriting: X/10
+[Kratky komentar ke skore – 2 az 3 vety co skore znamena a co nejvice tahne dolu]
+
+CO DELA DOBRE
+1. [Konkretni silna stranka e-shopu – co funguje a proc to funguje]
+   Proc to funguje: [vysvetleni s odkazem na CRO principy]
+2. [Dalsi silna stranka]
+   Proc to funguje: [vysvetleni]
+3. [Dalsi silna stranka – minimalne 3, maximalne 5 polozek]
+   Proc to funguje: [vysvetleni]
 
 KRITICKE PRIORITY
-1. [konkretni problem s dopadem na konverze]
-   Proc to boli: [vysvetleni]
-   Jak opravit: [konkretni reseni]
-   ${withClarity ? 'Jak overit v Clarity: [kde se podivat v Clarity]' : ''}
+1. [Konkretni problem – pojmenuj presne o ktery prvek nebo stranku jde]
+   Proc to boli: [konkretni dopad na konverze s ciselnym odhadem]
+   Jak opravit: [krok za krokem, konkretni]
+   Odhadovany dopad: [napr. "zvyseni konverze o 0,3 az 0,8 %"]
+   ${withClarity ? 'Jak overit v Clarity: [kde presne se podivat – kterou funkci Clarity pouzit a co hledat]' : ''}
 
 VYSOKA PRIORITA
-1. [doporuceni]
-   Dopad: [odhad dopadu]
+1. [Doporuceni s konkretnim popisem]
+   Dopad: [odhad]
    Jak na to: [konkretni kroky]
    ${withClarity ? 'Clarity signal: [co hledat v datech]' : ''}
 
 STREDNI PRIORITA
-1. [doporuceni]
+1. [Doporuceni]
    Jak na to: [kroky]
 
 QUICK WINS (do 1 tydne)
-1. [co jde udelat rychle a levne]
+1. [Co jde udelat rychle a levne – konkretni zmena textu, barvy, poradi prvku atd.]
 
-Analyzuj tyto oblasti: homepage a prvni dojem, produktove stranky a fotografie, navigace a kategorie, kosik a checkout, trust signaly a recenze, mobilni verze, cenotvorba a slevy, copywriting a mikrotexty.
+Analyzuj tyto oblasti: homepage a prvni dojem (vcetne titlu a meta description ktere jsi ziskal), produktove stranky a fotografie, navigace a kategorie, kosik a checkout, trust signaly a recenze, mobilni verze, cenotvorba a slevy, copywriting a mikrotexty.
 
 Bud konkretni: pojmenuj konkretni prvky webu, uved konkretni cisla a kroky. Analyza musi byt primo pouzitelna jako akcni plan pro klienta.`
 
