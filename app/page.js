@@ -2,17 +2,21 @@
 import { useState, useEffect, useRef } from 'react'
 
 const LOADING_PHASES = [
-  '🔍 Analyzuji první dojem a důvěryhodnost...',
-  '🛍️ Procházím produktové stránky...',
-  '🧭 Kontroluji navigaci a kategorie...',
-  '🛒 Vyhodnocuji košík a checkout...',
-  '⭐ Hledám problémy s trust signály...',
-  '📱 Kontroluji mobilní verzi...',
+  '🔍 Analyzuji první dojem a důvěryhodnost webu...',
+  '🖼️ Hodnotím kvalitu hero sekce a above-the-fold obsahu...',
+  '🛍️ Procházím produktové stránky a fotografie...',
+  '🧭 Kontroluji strukturu navigace a kategorií...',
+  '🔎 Testuju interní vyhledávání a filtrování...',
+  '🛒 Vyhodnocuji průběh košíku a checkout procesu...',
+  '🚚 Kontroluji možnosti dopravy a jejich zobrazení...',
+  '⭐ Hledám slabiny v trust signálech a recenzích...',
+  '📱 Simuluji chování uživatele na mobilním zařízení...',
   '💰 Analyzuji cenotvorbu a psychologii cen...',
-  '✍️ Hodnotím copywriting a mikrotexty...',
-  '🔎 Prohledávám znalostní bázi KRIS...',
-  '📊 Generuji prioritizovaná doporučení...',
-  '🚀 Finalizuji CRO akční plán...',
+  '✍️ Hodnotím copywriting, CTA tlačítka a mikrotexty...',
+  '🧠 Prohledávám znalostní bázi KRIS a ESHOP BOOSTER...',
+  '📊 Prioritizuji nálezy podle dopadu na konverze...',
+  '⚡ Identifikuji quick wins realizovatelné do 1 týdne...',
+  '🚀 Finalizuji CRO akční plán s konkrétními kroky...',
 ]
 
 function Logo() {
@@ -140,14 +144,23 @@ export default function Home() {
       setSeconds(0)
       setPhaseIndex(0)
       timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
-      phaseRef.current = setInterval(() => setPhaseIndex(i => (i + 1) % LOADING_PHASES.length), 4000)
+
+      // Náhodný interval 6–12 sekund pro každou fázi
+      const scheduleNextPhase = () => {
+        const delay = (6 + Math.random() * 6) * 1000
+        phaseRef.current = setTimeout(() => {
+          setPhaseIndex(i => (i + 1) % LOADING_PHASES.length)
+          scheduleNextPhase()
+        }, delay)
+      }
+      scheduleNextPhase()
     } else {
       clearInterval(timerRef.current)
-      clearInterval(phaseRef.current)
+      clearTimeout(phaseRef.current)
     }
     return () => {
       clearInterval(timerRef.current)
-      clearInterval(phaseRef.current)
+      clearTimeout(phaseRef.current)
     }
   }, [loading])
 
