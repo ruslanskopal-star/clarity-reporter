@@ -9,8 +9,8 @@ function EshopBoosterLogo() {
       <text x="10" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">ESH</text>
       <!-- O symbol - zaobleny obdelnik s sipkou -->
       <g transform="translate(72, 4)">
-        <rect x="0" y="0" width="22" height="28" rx="7" ry="7" fill="#111"/>
-        <path d="M11,3 L16,10 L13.5,10 L13.5,22 Q13.5,25 11,25 Q8.5,25 8.5,22 L8.5,10 L6,10 Z" fill="white"/>
+        <rect x="0" y="0" width="20" height="28" rx="8" fill="#111"/>
+        <path d="M10,2.5 L15.5,9.5 L12.5,9.5 L12.5,24 Q12.5,27 10,27 Q7.5,27 7.5,24 L7.5,9.5 L4.5,9.5 Z" fill="white"/>
       </g>
       <text x="97" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">P</text>
       <!-- BOOSTER text -->
