@@ -1,104 +1,210 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
 
-var KB = "Jsi expert na CRO a UX pro e-shopy podle metodologie EshopBooster. Analyzuj e-shop klienta a dej konkretni doporuceni v techto oblastech:\n\n";
+// ============================================================
+// KRIS - Knowledge-based Report Intelligence System
+// Engine postavený na metodologii ESHOP BOOSTER
+// + znalostní báze z blogu Ondřeje Ilinčeva (ilincev.com)
+// ============================================================
 
-KB += "=== GOOGLE QUALITY SCORE ===\n";
-KB += "Google hodnoti weby skorem 0-99 (neni verejne). Ovlivnuje SEO pozice a cenu kliku v reklame (o 20-30%). Benchmark segmentu cca 45-50 bodu. E-shop s dobrym zpracovanim muze dosahovat 80+ bodu. Google hodnoti: velikost pisma (min 13px), citelnost/kontrast, klikatelnost prvku, duveryhodnost, FAQ, recenze, interni prolinkovani, pribeh znacky, osobni kontakt.\n\n";
+const KRIS_KNOWLEDGE_BASE = `
+# KRIS ZNALOSTNÍ BÁZE – ESHOP BOOSTER + ILINČEV METODOLOGIE
 
-KB += "=== HP - HLAVNI STRANKA ===\n";
-KB += "- USP lista: musi byt na HP i na detailu produktu i v kategorii. Pokud chybi, prokazatelne snizuje konverze. USP musi byt proklikavajici na staticke stranky s detailnimi informacemi. Chybi-li staticke stranky, zakaznik ztrati duveru.\n";
-KB += "- Logo: doplnit dovetek nazvu (napr. 'specialiste na...') - zakaznik vi kde je a co e-shop prodava.\n";
-KB += "- Logo Heureka: umistit mezi logo a vyhledavani - zvysuje duveryhodnost.\n";
-KB += "- Kontakt v hlavicce: tel. cislo + email + fotka oblicej + zelene/cervene kolecko dostupnosti podpory. Zobrazit i v paticce.\n";
-KB += "- Hamburger menu: doplnit kontakty (tel, email) - zakaznik muze kontaktovat na jeden klik.\n";
-KB += "- Info menu: pridat listu s: Kontakt, O nas, Recenze, Doprava, Garance, Blog, Castoze dotazy. OP dat do paticky ne do menu.\n";
-KB += "- Vyhledavani: viditelne na desktopu i mobilu. Na mobilu musi byt jasne videt i pri otevreni hamburger menu. Idealne s pohybujicim se textem.\n";
-KB += "- Hello bar: vyrazna barva, spravny kontrast (ne cerna+tmave seda). Pouzit pro akce, limitovane nabidky. Pro max efekt kombinovat hello bar + detail produktu + kategorie.\n";
-KB += "- Bannery: musi mit CTA tlacitko. Splnovat squint test (jasne srozumitelne pri zamraceni). Max 2 slidery na HP.\n";
-KB += "- Rychly rozcestnik (dlazdicove menu): prehledny, razeny podle prodejnosti. Proklikovost dlazdic ma velky vliv na konverze.\n";
-KB += "- Recenze na HP: umistit co nejvys. Zlate hvezdicky. Rucne vybrat 12 nejlepsich. Symbol overene recenze. Logo Heureka/Google u recenzi. Proklik na vsechny reference.\n";
-KB += "- Kolo stesti: zvazit pro sbiranje emailu / slevove kody (sluzba Koloo - plne responzivni).\n";
-KB += "- Paticka: kontakty, loga Heureka, platebni metody, prepravci, staticke stranky.\n";
-KB += "- Text na HP: vyuzit pro kredibilitu, prolinkovat do kategorii a statickych stranek.\n";
-KB += "- Kammenna prodejna: prezentovat na co nejvice mistech (menu, paticka, detail produktu, staticke stranky).\n\n";
+## PRVNÍ DOJEM A DŮVĚRYHODNOST
+- Návštěvník si udělá první dojem za 0,1 sekundy – vizuální kvalita webu přímo ovlivňuje vnímanou důvěryhodnost
+- Halo efekt: krásný web = lepší produkt v mysli zákazníka, i když to není pravda
+- Nejdůležitější trust signály: recenze, fotky reálných zákazníků, certifikáty, média ve kterých se e-shop objevil
+- "Above the fold" (co zákazník vidí bez scrollování) musí okamžitě komunikovat: co prodáváte, proč u vás, a výzvu k akci
+- Slider na homepage je mrtvý – zobrazuje jen první slide, zbytek nikdo nevidí. Místo slideru použijte statický hero banner s jednou silnou nabídkou
+- Animace a efekty zpomalují načítání a odkazují pozornost od konverze
 
-KB += "=== KATEGORIE ===\n";
-KB += "- Razeni produktu: nejprodavanejsi na prvnich mistech, skladem produkty vzdy pred nedostupnymi.\n";
-KB += "- Filtry: rozbalene, razene podle dulezitosti pro zakaznika. Zabaleny filtr je casto prehlednuty.\n";
-KB += "- Termin dodani: zobrazit u produktu ve vypisu (skladem / dnes / zitra).\n";
-KB += "- Stitky: 'lidovka', 'zlata stredni cesta', 'pro narocne' - maji velky vliv na konverze.\n";
-KB += "- Hvezdicky: zobrazovat jen u produktu kde jsou a kde je hodnoceni dobre. Prazdne hvezdicky skryt.\n";
-KB += "- Text kategorie: vyuzit pro kredibilitu + rozcestnik na informace ktere zakaznika zajimaji.\n";
-KB += "- Dynamicke titulky: pri filtrovani menit nazev kategorie a title stranky (lepsi SEO).\n";
-KB += "- Podkategorie: zobrazit jasne pomoci ikonek, fungovat spravne i na mobilu.\n";
-KB += "- Nahledovy obrazek: po najeti mysi zobrazit infografiku nebo klicove body produktu.\n\n";
+## PRODUKTOVÉ STRÁNKY A FOTOGRAFIE
+- 75 % zákazníků považuje fotky za klíčové při rozhodování o koupi (Weebly)
+- 58 % zákazníků chce vidět produkt ze všech stran – minimum jsou 3–5 fotek
+- Každý 5. zákazník vrátí produkt, protože fotka neodpovídala realitě
+- Lifestyle fotky (produkt v kontextu použití) výrazně zvyšují konverze u oblečení, doplňků, nábytku
+- Zoom funkce na produktových fotkách je nutnost
+- Video produktu zvyšuje konverze až o 80 % u komplexnějších produktů
+- Popis produktu: zákazníci nečtou, skenují. Bullet pointy > odstavce. Nejdůležitější info první.
+- Dostupnost skladem musí být jasně viditelná (zelená = skladem, červená = vyprodáno)
+- U dočasně vyprodaných produktů: dejte možnost upozornění na naskladnění – neztrácejte zákazníka
+- Trvale vyprodané produkty: přesměrujte na alternativy, nesmazávejte stránku (SEO hodnota)
 
-KB += "=== DETAIL PRODUKTU ===\n";
-KB += "- Reference: primo pod nazev produktu - zlaté hvezdicky, pocet hodnoceni.\n";
-KB += "- Termin dodani: zobrazit jako 'dnes', 'zitra', 'pozitri' + datum. Ne jen 'muzeme dorucit'.\n";
-KB += "- Infografika v galerii: u TOP produktu pridat infografiku s klicovymi body.\n";
-KB += "- Klicove informace: shrnout bodove hned na zacatku popisku.\n";
-KB += "- FAQ: pridat na stranku - pro zakaznika i pro Google.\n";
-KB += "- Upsell/cross-sell: nabizet doplnkove produkty a balicky. Nabidnout i pri pridani do kosiku.\n";
-KB += "- Univerzalni informace o firme: recyclovatelny blok across vsemi detaily - usetri cas a zvysuje kredibilitu vsude.\n";
-KB += "- Proc nakoupit zrovna u vas: ukaz vyhody s fotkai/gify - funguje na vjemy a emoce zakaznika.\n";
-KB += "- Box 'nevite si rady': kontaktni tel + email v detailu produktu.\n";
-KB += "- Nazor odbornika: pridat u TOP produktu.\n";
-KB += "- Galerie: pridat foto referencí spokojených zákazníků.\n";
-KB += "- Logo Heureka: viditelne zobrazit v detailu produktu.\n";
-KB += "- Ukaz ze jsi 'zubar': dokazat svoji odbornost v detailu produktu.\n\n";
+## NAVIGACE A KATEGORIE
+- Hamburger menu na desktopu je chyba – skrývá navigaci a snižuje konverze
+- Mega menu funguje lépe než dropdown pro e-shopy s více kategoriemi
+- Drobečková navigace (breadcrumbs) je povinnost – zákazník musí vědět kde je a jak se vrátit
+- Vyhledávání na e-shopu: zákazníci, kteří vyhledávají, konvertují 2–3× lépe než ti co brouzdají
+- Kategorie: méně je více – příliš mnoho kategorií mate. Testujte card sorting s reálnými zákazníky
+- Filtry v kategoriích: klíčové pro velké katalogy. Nejdůležitější filtry vždy nahoře, viditelné
 
-KB += "=== KOSIK ===\n";
-KB += "- Policko slevoveho kodu: skryt nebo minimalizovat - viditelne policko posila zakazniky hledat slevo na Google, kde najdou konkurenci.\n";
-KB += "- Apple Pay / Google Pay: pridat - vyrazne zvysuje konverze u mobilnich uzivatelu.\n";
-KB += "- QR kod: pridko platebni metodu - pro e-shop vyhoda (neplatis % poplatek).\n";
-KB += "- Termin dodani: zopakovat i v kosiku - klicova informace pro dokonceni objednavky.\n";
-KB += "- Upsell: nabizet relevantni produkty pri pridani do kosiku i v kroku 1 kosiku.\n";
-KB += "- Doplnkove moznosti: dycko (dysko), pojisteni, prodlouzena zaruka.\n";
-KB += "- Prazdny kosik: zpracovat kreativne - zobrazit bestsellery, kontakt, argumenty proc nakoupit.\n\n";
+## CHECKOUT A OBJEDNÁVKOVÝ PROCES (analýza 200 e-shopů)
+- Dopravci: Zásilkovna vede (9 500 výdejních míst), Česká pošta klesá kvalitou. Doporučení: 3 dopravci na adresu + 2 na výdejny
+- Sjednoťte výdejní místa různých dopravců do jedné položky s výběrem z mapy (dělá to jen 10 % e-shopů)
+- Ceny dopravy: průměr 96 Kč na adresu, 70 Kč výdejní místo. Doporučení: 99 Kč / 69 Kč (psychologické ceny)
+- Datum doručení: zobrazujte u každé dopravy – dělá to jen polovina e-shopů! Zákazníci to chtějí vědět
+- Doprava zdarma od určité hranice: nabízí 75 % e-shopů, medián je 1 500 Kč
+- Vzorec pro výpočet hranice dopravy zdarma: AOV + (cena dopravy / marže)
+  Příklad: 1 250 + (69 / 0,3) = 1 480 Kč
+- Doprava zdarma na vše zvyšuje vratkovost u impulzivních nákupů (oblečení, dekorace) – pozor!
+- Amazon zvýšil obrat o 12,4 % díky dopravě zdarma – ale funguje hlavně u funkčních produktů
+- Platba: nabízejte kartu, dobírku, bankovní převod, Apple/Google Pay (60 % e-shopů ho má)
+- U dobírky uveďte "lze platit hotově i kartou" – 70 % e-shopů tuto info nemá
+- KRITICKÁ CHYBA: Neptejte se na doručovací adresu, když si zákazník vybral osobní odběr! Dělá to 54 % e-shopů
+- Pamatujte si vyplněné údaje – 56 % e-shopů si to nepamatuje = frustrující UX
+- Přihlášení: dejte možnost přihlásit se v kroku adresy (třetina e-shopů to nenabízí)
+- Registraci navrhujte až na děkovací stránce (stačí se zeptat na heslo) – dělá to jen 15 % e-shopů
+- Obchodní podmínky: místo checkboxu použijte oznámení "Kliknutím na Koupit souhlasíte s OP" – polovina e-shopů to nemá
+- Minimalizujte počet polí ve formuláři – každé extra pole snižuje konverze
+- Autofill/autocomplete správně ozáhlte HTML atributy, vyhněte se externím našeptávačům adresy (kolizní)
 
-KB += "=== MOBILNI VERZE ===\n";
-KB += "- Hamburger menu: umistitit vpravo (prirozene pro pravacky).\n";
-KB += "- Vyhledavani: jasne viditelne na mobilu stale.\n";
-KB += "- Rozbaleni kategorii: prehledne a spravne.\n";
-KB += "- Kosik: kompletne zkontrolovat a odladit na mobilu.\n\n";
+## PRŮMĚRNÁ HODNOTA OBJEDNÁVKY (AOV)
+- Zvyšovat AOV lze přes: upsell/cross-sell, balíčky, množstevní slevy, doplňkové služby
+- Upsell = nabídněte lepší verzi produktu. Cross-sell = nabídněte doplněk (k botám – ponožky)
+- Balíčky fungují nejlépe u opakovaně kupovaných produktů (kosmetika, doplňky stravy)
+- Množstevní slevy: "3 za cenu 2" funguje lépe než "33% sleva" psychologicky
+- POZOR: Agresivní slevy zvyšují AOV, ale snižují marži. Sledujte průměrnou marži na objednávku, ne jen AOV
+- Doporučení produktů "zákazníci, kteří koupili X, také koupili Y" – algoritmus musí být relevantní
+- Hranici dopravy zdarma nastavte mírně nad průměrnou AOV – zákazník si přiloží produkt
 
-KB += "=== OBECNE / TECHNICKE ===\n";
-KB += "- Velikost pisma: min 13px, idealne 16px.\n";
-KB += "- Kontrast: splnovat WCAG standard. Overit na color.review.\n";
-KB += "- Page Speed: obrazky idealne pod 100kb. Sledovat Core Web Vitals na pagespeed.web.dev.\n";
-KB += "- Staticke stranky: zpracovat kvalitne pro kazde USP, dopravu, zaruku, o nas, kontakt, kamennou prodejnu.\n";
-KB += "- Interni prolinkovani: prolinkovat text na kategorie a staticke stranky.\n";
-KB += "- Meta data a title: zpracovat pro klicove kategorie, pridat USP do titulku.\n";
+## RECENZE A SOCIÁLNÍ DŮKAZ
+- Recenze jsou nejsilnější trust signál – 92 % zákazníků čte recenze před nákupem
+- Negativní recenze nejsou problém – perfektní hodnocení 5.0 je podezřelé. Optimum je 4,2–4,7
+- Umístění recenzí: na produktové stránce pod popisem, ale i na homepage a v košíku
+- Recenze s fotkami od zákazníků konvertují 2× lépe než textové
+- Odpovídejte na negativní recenze veřejně – ukazuje to zákaznický servis
+- Počet recenzí je důležitý – pod 10 recenzí zákazníci nedůvěřují. 50+ je solidní
+- Heureka, Google Shopping: hodnocení se zobrazuje ve výsledcích vyhledávání = CTR boost
+
+## SLEVY A CENY (EU regulace 2023)
+- Nová EU regulace: musíte zobrazovat nejnižší cenu za posledních 30 dní jako referenční
+- Škrtnutá cena musí být skutečná předchozí cena, ne uměle navýšená
+- "Flash slevy" a falešná urgence (odpočítávání) jsou právně rizikové
+- Psychologické ceny: 999 Kč funguje lépe než 1 000 Kč, ale 997 Kč je lepší než 995 Kč
+- Zaokrouhlené ceny (100, 500, 1000 Kč) signalizují luxus a prémiovost
+- Zobrazujte úsporu v korunách (Ušetříte 350 Kč) i v procentech – záleží na kategorii
+
+## MIKROTEXTY A COPYWRITING
+- Mikrotexty (texty na tlačítkách, popisky polí, error hlášky) mají obrovský dopad na konverze
+- Tlačítko "Koupit" konvertuje lépe než "Objednat" nebo "Přidat do košíku"
+- Error hlášky: buďte konkrétní a přátelští – "Zadejte prosím e-mail ve formátu jmeno@email.cz" místo "Chyba"
+- Prázdné stavy (košík bez produktů): využijte jako konverzní příležitost, ne jen "Košík je prázdný"
+- Tlačítko musí říkat co se stane po kliknutí – ne generické "Odeslat" ale "Získat nabídku zdarma"
+
+## MOBILNÍ VERZE
+- Více než 60 % návštěvníků e-shopů přichází z mobilu, ale jen 30 % tam nakoupí
+- Formuláře na mobilu: používejte správný typ klávesnice (type="tel", type="email", type="number")
+- Tlačítka: minimální velikost 44×44 px (dotek prstu), dostatečné mezery
+- Hamburguer menu na mobilu: OK, ale nejdůležitější sekce dejte rovnou do navigace
+- Sticky košík / CTA tlačítko na mobilu výrazně zvyšuje konverze
+- Načítací čas na mobilu: každá sekunda navíc = 7 % pokles konverzí
+
+## DARK PATTERNS – ČEHO SE VYVAROVAT
+- Skryté poplatky přidané v posledním kroku objednávky = nejčastější důvod opuštění košíku
+- Předvybrané souhlasy s newsletterem nebo pojištěním jsou neetické a v EU ilegální
+- Falešná urgence ("Zbývají jen 3 kusy!" při 300 skladem) poškozuje brand
+- Obtížné zrušení předplatného nebo objednávky = negativní recenze a chargebacks
+- Confimshaming ("Ne, nechci ušetřit peníze") je manipulativní a zákazníci to poznají
+
+## BRAND A DIFERENCIACE
+- Brand funguje jako placebo – stejný produkt s lepším brandem zákazníci vnímají jako kvalitnější
+- Konkurovat pouze cenou je sebevražda – vždy přijde někdo levnější
+- Najděte svou konkurenční výhodu: specializace, rychlost dodání, servis, komunita, udržitelnost
+- "O nás" stránka je 3.–5. nejnavštěvovanější stránka e-shopu – investujte do ní
+- Příběh zakladatele/značky zvyšuje konverze a loajalitu zákazníků
+- Zákazníci po nákupu prochází "výčitkami" – follow-up e-mail do 24 hodin pomáhá retenci
+
+## ANALYTIKA A A/B TESTOVÁNÍ
+- Netestujte intuicí – každá změna může konverze zvýšit i snížit
+- A/B test potřebuje statistickou signifikanci – minimum 95 %, ideálně 99 %
+- Testujte vždy jen jednu proměnnou najednou
+- Nejlepší věci k testování: nadpis, CTA tlačítko, cena dopravy, pořadí produktů
+- Mouse tracking (Hotjar, MS Clarity) odhalí kde zákazníci klikají a kde odchází
+- Heatmapa + záznam sessionů = nejlevnější CRO investice s největším ROI
+- Nejčastější místa úniku: produktová stránka, košík, krok adresy
+
+## LOAJALITA A RETENCE
+- Získat nového zákazníka stojí 5–7× více než udržet stávajícího
+- Follow-up e-maily po nákupu: poděkování, tracking zásilky, cross-sell 2 týdny po doručení
+- Věrnostní program musí mít jasnou hodnotu – bodové systémy fungují, ale musí být jednoduché
+- Recenze žádejte 7–14 dní po doručení = nejvyšší response rate
+`
 
 export async function POST(req) {
-  var body = await req.json();
-  var clientName = body.clientName;
-  if (!clientName) return NextResponse.json({ error: "Chybi jmeno" }, { status: 400 });
   try {
-    var Anthropic = (await import("@anthropic-ai/sdk")).default;
-    var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const { clientName } = await req.json()
 
-    var prompt = KB + "\n\nKlient: " + clientName + "\n\n";
-    prompt += "Na zaklade teto kompletni metodologie EshopBooster vytvor detailni CRO analyzu pro e-shop " + clientName + ".\n\n";
-    prompt += "Strukturuj analyzu do techto sekci:\n\n";
-    prompt += "KRITICKE PROBLEMY - resit ihned (veci ktere prokazatelne nejvice skodi konverzim)\n";
-    prompt += "VYSOKA PRIORITA - resit do mesice\n";
-    prompt += "STREDNI PRIORITA - resit do 3 mesicu\n";
-    prompt += "QUICK WINS - snadne zmeny s velkym dopadem\n\n";
-    prompt += "Pro kazde doporuceni: co presne chybi nebo je spatne, jak to opravit konkretne, jaky dopad to bude mit na konverze.\n";
-    prompt += "Zames se na vsechny oblasti: HP, kategorie, detail produktu, kosik, mobilni verzi, duveryhodnost, USP, Page Speed a Google quality score.\n";
-    prompt += "Celkem 15-20 konkretnich doporuceni.";
+    if (!clientName) {
+      return NextResponse.json({ success: false, error: 'Chybí jméno klienta' })
+    }
 
-    var message = await anthropic.messages.create({
-      model: "claude-opus-4-5",
-      max_tokens: 4000,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ success: false, error: 'API klíč není nastaven' })
+    }
 
-    var analysis = message.content[0].type === "text" ? message.content[0].text : "";
-    return NextResponse.json({ success: true, analysis: analysis });
+    const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopů metodologie ESHOP BOOSTER.
+
+Tvá znalostní báze:
+${KRIS_KNOWLEDGE_BASE}
+
+TVOJE ÚLOHA:
+Analyzuj e-shop klienta a vytvoř strukturovanou CRO analýzu. Piš v češtině, konkrétně a akcionovatelně. Každé doporučení musí být specifické pro daný e-shop, ne obecné.
+
+POVINNÁ STRUKTURA ANALÝZY (dodržuj přesně tato označení pro správné zobrazení):
+
+KRITICKE PRIORITY: [název sekce]
+1. [konkrétní problém s dopadem na konverze]
+- Proč to bolí: [vysvětlení]
+- Jak opravit: [konkrétní řešení]
+
+VYSOKA PRIORITA: [název sekce]
+1. [doporučení]
+- Dopad: [odhad dopadu]
+- Jak na to: [konkrétní kroky]
+
+STREDNI PRIORITA: [název sekce]
+1. [doporučení]
+- Jak na to: [kroky]
+
+QUICK WINS: Rychlé výhry (do 1 týdne)
+1. [co jde udělat rychle a levně]
+
+Analyzuj tyto oblasti: homepage a první dojem, produktové stránky a fotografie, navigace a kategorie, košík a checkout, trust signály a recenze, mobilní verze, ceny a slevy, copywriting a mikrotexty.
+
+Pokud konkrétní e-shop neznáš, vycházej z obecné praxe v dané kategorii produktů a aplikuj znalostní bázi KRIS.`
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: `Připrav kompletní KRIS CRO analýzu pro e-shop: ${clientName}
+
+Zaměř se na nejčastější problémy v dané kategorii produktů. Buď konkrétní – jmenuj konkrétní prvky webu, konkrétní čísla, konkrétní kroky. Analýza musí být přímo použitelná jako akční plán.`,
+          },
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      return NextResponse.json({ success: false, error: 'Chyba API: ' + err })
+    }
+
+    const data = await response.json()
+    const analysis = data.content?.[0]?.text || ''
+
+    return NextResponse.json({ success: true, analysis })
   } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: e.message || 'Neznámá chyba' })
   }
 }
