@@ -78,7 +78,7 @@ export default function Home() {
       <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px" }}>
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <div style={{ display: "inline-block", marginBottom: "20px" }}>
-            <EshopBoosterLogo />
+            <div style={{ display: "inline-block", background: "white", padding: "10px 22px", borderRadius: "8px", marginBottom: "20px" }}><span style={{ fontSize: "20px", fontWeight: "900", color: "#111" }}>ESHOP</span><span style={{ fontSize: "20px", fontWeight: "900", color: "#FF6B00" }}>BOOSTER</span></div>
           </div>
           <h1 style={{ fontSize: "32px", fontWeight: "900", color: "white", margin: "0 0 6px 0", textTransform: "uppercase" }}>CRO Analyza</h1>
           <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#FF6B00", margin: "0", textTransform: "uppercase", letterSpacing: "3px" }}>Clarity Reporter</h2>
