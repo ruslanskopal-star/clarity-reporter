@@ -1,5 +1,5 @@
-// route_v6_edge_v8.js
-// Zmeny oproti v7: injektovani realneho data do system promptu
+// route_v6_edge_v9.js
+// Zmeny oproti v8: oprava TDZ - dateStr definovan pred dateInstruction
 
 export const runtime = 'edge'
 
@@ -176,6 +176,9 @@ export async function POST(req) {
       ? `Klient MA pristup do Microsoft Clarity. V analyze zahrn konkretni doporuceni jak vyuzit data z Clarity (heatmapy, rage clicks, dead clicks, session recordings, scroll depth) pro overeni a prioritizaci tvych doporuceni. U kazde kriticke nebo vysoke priority uved jak ji overit v Clarity datech.`
       : `Klient NEMA pristup do Microsoft Clarity. Analyzu postav na best practices a obecnych vzorech v dane kategorii. Doporuc zavedeni Clarity jako quick win pro dalsi optimalizaci.`
 
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
+
     const dateInstruction = `Dnesni datum je ${dateStr}. Pokud ve sve analyze uvadis datum analyzy, pouzij VZDY toto datum. Nikdy nepouzivej jine datum.`
 
     const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
@@ -217,9 +220,6 @@ QUICK WINS (do 1 tydne)
 Analyzuj tyto oblasti: homepage a prvni dojem, produktove stranky a fotografie, navigace a kategorie, kosik a checkout, trust signaly a recenze, mobilni verze, cenotvorba a slevy, copywriting a mikrotexty.
 
 Bud konkretni: pojmenuj konkretni prvky webu, uved konkretni cisla a kroky. Analyza musi byt primo pouzitelna jako akcni plan pro klienta.`
-
-    const now = new Date()
-    const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
 
     const userMessage = `Priprav kompletni KRIS CRO analyzu pro e-shop: ${clientUrl}
 
