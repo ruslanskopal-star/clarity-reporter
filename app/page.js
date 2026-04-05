@@ -9,7 +9,7 @@ function Logo() {
         <span style={{fontSize:'22px',fontWeight:'900',color:'#FF6B00',fontFamily:'Arial Black, Arial'}}>O</span>
         <span style={{fontSize:'22px',fontWeight:'900',color:'white',fontFamily:'Arial Black, Arial'}}>P</span>
       </div>
-      <div style={{fontSize:'13px',fontWeight:'900',color:'#FF6B00'letterSpacing:'3px',fontFamily:'Arial Black, Arial',marginTop:'2px'}}>BOOSTER</div>
+      <div style={{fontSize:'13px',fontWeight:'90',color:'#FF6B00',letterSpacing:'3px',fontFamily:'Arial Black, Arial',marginTop:'2px'}}>BOOSTER</div>
     </div>
   )
 }
