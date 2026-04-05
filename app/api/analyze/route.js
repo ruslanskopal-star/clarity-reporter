@@ -15,6 +15,9 @@ export const runtime = 'edge'
 const KRIS_KNOWLEDGE_BASE = `
 # KRIS ZNALOSTNI BAZE v9
 
+## KRITICKE PRAVIDLO VYSTUPU
+NIKDY nepouzivej fraze jako "neoveril jsem", "doporucuji overit", "bez pristupu k rozhrani nelze". Pokud nemas prima data, formuluj jako hypotezu s dopadem: "Pravdepodobne chybi X — pokud ano, dopad je Y %. Jak overit v Clarity: [konkretni krok]."
+
 ## GOOGLE SKORE KVALITY VSTUPNI STRANKY
 - Hodnota 1-99, neni verejne dostupna, jina pro hlavni domenu a dilci URL
 - Ovlivnuje: pozice ve vyhledavani, cenu prokliku v reklame, zobrazeni v AI Overview
@@ -288,6 +291,8 @@ OSMI STANDARDNICH OBLASTI SKORE (pouzij vzdy tychto 8, poradi muze zmenit dle pr
 Format pro kazdou oblast: "Oblast: X/10 | Komentar: [1 veta co konkretne chybi nebo funguje]"
 Pozor: Skore musi byt relativni vuci kategorii a velikosti e-shopu.
 Niche specializovany e-shop hodnoť vyse za autenticky obsah a odbornost.
+
+DULEZITE PRO MOBILNI VERZI: Pokud nemas Clarity data ani primy pristup k mobilni verzi webu, uved skore jako "N/A" s textem "Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze." NIKDY nevymyslej fiktivni skore pro mobil bez dat.
 `
 
     const strictRules = `
@@ -334,7 +339,7 @@ Oblast | Odhadovany dopad
 Celkova delka: 1 strana A4 max.
 ` : `
 REZIM: PLNA ANALYZA
-POVINNÁ STRUKTURA:
+ZAVAZNA STRUKTURA VYSTUPU — kazda analyza musi mit PRESNE tyto sekce v tomto poradi:
 
 SKORE E-SHOPU
 [Cislo 0-100]
@@ -343,24 +348,23 @@ ${scoringAreas}
 [2 vety komentar]
 
 CO DELA DOBRE
-1-3 polozky s "Proc to funguje:"
+Top 3 silne stranky s vysvetlenim "Proc to funguje: [konkretni duvod]"
 
-KRITICKE PRIORITY (max 4)
+TOP 5 QUICK WINS (od nejvetsiho dopadu)
+Kazdy Quick Win MUSI obsahovat vsechny 4 casti:
 1. [Nazev]
-   Proc to boli: [dopad v %]
-   Jak opravit: [max 5 kroku]
-   Odhadovany dopad: [cislo]
-   ${withClarity ? 'Jak overit v Clarity: [1 veta]' : ''}
+   Problem: [1 veta popis problemu]
+   Jak opravit: [krok po kroku, max 4 kroky]
+   Odhadovany dopad: [cislo nebo %]
+   Jak overit v Clarity: [konkretni krok]
 
-VYSOKA PRIORITA (max 4)
-1. [Doporuceni]
-   Dopad: [odhad]
-   Jak na to: [max 4 kroky]
-
-STREDNI PRIORITA (max 4, kratce 1-2 vety na polozku)
-
-QUICK WINS (max 6, kazdy max 3 vety)
-Clarity sem pat jako bod 1 kdyz klient nema.
+CLARITY CHECKLIST
+5 konkretnich veci ktere ma klient zkontrolovat v Clarity (ocislovany seznam, kazda 1 veta):
+1.
+2.
+3.
+4.
+5.
 
 DUVERYHODNOSTNI MATICE
 Prvek | Aktualni stav | Priorita
