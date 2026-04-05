@@ -5,16 +5,13 @@ function EshopBoosterLogo() {
   return (
     <svg width="180" height="60" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg">
       <rect width="180" height="60" rx="6" fill="white"/>
-      <!-- ESHOP text -->
       <text x="10" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">ESH</text>
-      <!-- O symbol - zaobleny obdelnik s sipkou -->
-      <g transform="translate(72, 4)">
+      <g transform="translate(72, 3)">
         <rect x="0" y="0" width="20" height="28" rx="8" fill="#111"/>
         <path d="M10,2.5 L15.5,9.5 L12.5,9.5 L12.5,24 Q12.5,27 10,27 Q7.5,27 7.5,24 L7.5,9.5 L4.5,9.5 Z" fill="white"/>
       </g>
-      <text x="97" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">P</text>
-      <!-- BOOSTER text -->
-      <text x="10" y="50" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="17" fill="#111" letterSpacing="3">BOOSTER</text>
+      <text x="95" y="28" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="24" fill="#111" letterSpacing="0.5">P</text>
+      <text x="10" y="50" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="17" fill="#111" letterSpacing="2.5">BOOSTER</text>
     </svg>
   );
 }
@@ -64,15 +61,9 @@ export default function Home() {
     if (line.indexOf("QUICK") !== -1) {
       return { color: "#00ccff", fontWeight: "700", fontSize: "17px", marginTop: "24px", marginBottom: "8px", borderLeft: "4px solid #00ccff", paddingLeft: "12px" };
     }
-    if (/^\d+\./.test(line)) {
-      return { color: "#ddd", marginTop: "12px", paddingLeft: "8px" };
-    }
-    if (line.startsWith("- ")) {
-      return { color: "#aaa", paddingLeft: "20px", marginTop: "4px", fontSize: "14px" };
-    }
-    if (line.trim() === "") {
-      return { height: "4px" };
-    }
+    if (/^\d+\./.test(line)) return { color: "#ddd", marginTop: "12px", paddingLeft: "8px" };
+    if (line.startsWith("- ")) return { color: "#aaa", paddingLeft: "20px", marginTop: "4px", fontSize: "14px" };
+    if (line.trim() === "") return { height: "4px" };
     return { color: "#ccc", marginTop: "6px", fontSize: "15px" };
   }
 
@@ -85,7 +76,6 @@ export default function Home() {
   return (
     <div style={{ minHeight: "100vh", background: "#111", fontFamily: "Arial Black, Arial, sans-serif", padding: "20px" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px" }}>
-
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <div style={{ display: "inline-block", marginBottom: "20px" }}>
             <EshopBoosterLogo />
@@ -93,7 +83,6 @@ export default function Home() {
           <h1 style={{ fontSize: "32px", fontWeight: "900", color: "white", margin: "0 0 6px 0", textTransform: "uppercase" }}>CRO Analyza</h1>
           <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#FF6B00", margin: "0", textTransform: "uppercase", letterSpacing: "3px" }}>Clarity Reporter</h2>
         </div>
-
         <div style={{ background: "#1a1a1a", border: "2px solid #FF6B00", borderRadius: "16px", padding: "32px", marginBottom: "32px" }}>
           <p style={{ color: "#888", fontSize: "14px", marginTop: "0", marginBottom: "20px", textAlign: "center", fontFamily: "Arial, sans-serif" }}>
             Zadej jmeno klienta a AI vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
@@ -116,18 +105,9 @@ export default function Home() {
               {loading ? "Analyzuji..." : "Spustit"}
             </button>
           </div>
-          {error && (
-            <div style={{ marginTop: "16px", padding: "14px", background: "#2a0a0a", border: "2px solid #aa0000", borderRadius: "8px", color: "#ff4444", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
-              {error}
-            </div>
-          )}
-          {loading && (
-            <p style={{ color: "#666", fontFamily: "Arial, sans-serif", fontSize: "14px", textAlign: "center", marginTop: "16px" }}>
-              AI generuje analyzu, cca 30 sekund...
-            </p>
-          )}
+          {error && <div style={{ marginTop: "16px", padding: "14px", background: "#2a0a0a", border: "2px solid #aa0000", borderRadius: "8px", color: "#ff4444", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>{error}</div>}
+          {loading && <p style={{ color: "#666", fontFamily: "Arial, sans-serif", fontSize: "14px", textAlign: "center", marginTop: "16px" }}>AI generuje analyzu, cca 30 sekund...</p>}
         </div>
-
         {analysis && (
           <div style={{ background: "#1a1a1a", border: "2px solid #333", borderRadius: "16px", padding: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", paddingBottom: "16px", borderBottom: "2px solid #333" }}>
@@ -135,19 +115,12 @@ export default function Home() {
                 <div style={{ color: "#FF6B00", fontSize: "12px", fontWeight: "700", letterSpacing: "3px", textTransform: "uppercase", marginBottom: "4px" }}>CRO Analyza</div>
                 <div style={{ color: "white", fontSize: "22px", fontWeight: "900" }}>{clientName}</div>
               </div>
-              <div style={{ background: "#FF6B00", borderRadius: "8px", padding: "8px 16px", fontSize: "12px", fontWeight: "700", color: "white", textTransform: "uppercase" }}>
-                ESHOP BOOSTER
-              </div>
+              <div style={{ background: "#FF6B00", borderRadius: "8px", padding: "8px 16px", fontSize: "12px", fontWeight: "700", color: "white", textTransform: "uppercase" }}>ESHOP BOOSTER</div>
             </div>
-            <div style={{ fontFamily: "Arial, sans-serif", lineHeight: "1.7" }}>
-              {formatAnalysis(analysis)}
-            </div>
+            <div style={{ fontFamily: "Arial, sans-serif", lineHeight: "1.7" }}>{formatAnalysis(analysis)}</div>
           </div>
         )}
-
-        <p style={{ textAlign: "center", color: "#333", fontSize: "12px", marginTop: "24px", fontFamily: "Arial, sans-serif" }}>
-          ESHOP BOOSTER 2026 - Ruslan Skopal
-        </p>
+        <p style={{ textAlign: "center", color: "#333", fontSize: "12px", marginTop: "24px", fontFamily: "Arial, sans-serif" }}>ESHOP BOOSTER 2026 - Ruslan Skopal</p>
       </div>
     </div>
   );
