@@ -339,6 +339,36 @@ const KRIS_KNOWLEDGE_BASE = `
 - Nejlepší formáty: průvodci "jak na X", srovnání produktů, případové studie, FAQ
 - Evergreen obsah >> trendový obsah pro dlouhodobé výsledky
 - Produktový obsah: řešení konkrétního problému zákazníka > technické parametry
+
+## AI A SEO – NOVÁ PRAVIDLA 2025/2026 (Czech Online Expo 2026, Jan Kvasnička)
+- Google aktivně penalizuje weby s převahou AI obsahu: od 09/2025 penalizace při >80 % AI obsahu, od 01/2026 již při >60 % AI obsahu – trend se bude zpřísňovat
+- AI obsah bez přidané hodnoty = nulová šance na viditelnost v Google; e-shopy s 200+ AI články mají obsah s přidanou hodnotou blížící se nule
+- Správné použití AI: AI jako asistent při tvorbě obsahu, NE jako autor; výsledek musí přinášet unikátní pohled, zkušenost nebo data
+- Google hodnotí weby přes tzv. "Skóre kvality vstupní stránky" (hodnota 1–99, není veřejně dostupná, liší se pro hlavní doménu a dílčí URL)
+- Skóre kvality ovlivňuje: pozice v SEO, cenu prokliku v PPC reklamě, zobrazení v AI overview/AI mode, ranking interního prolinkování
+- Co zvyšuje skóre kvality: kvalita a unikátnost obsahu, čitelnost (min. 13px písmo), mediální obsah, správné touch zóny, interní prolinkování
+
+## GOOGLE AI OVERVIEW A AI MODE – DOPADY NA E-SHOPY
+- AI overview (dříve SGE) mění chování uživatelů: část dotazů je zodpovězena přímo v Google bez kliknutí na web
+- E-shopy musí optimalizovat obsah tak, aby byly citovány v AI odpovědích Google (= nový typ "SEO")
+- Strukturovaná data (schema.org) jsou klíčová pro zařazení do AI odpovědí
+- Důvěryhodnostní matice webu: Google hodnotí E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) stále přísněji v době AI
+- Signature prvky webu (unikátní prvky které odlišují web) zvyšují skóre kvality a důvěryhodnost
+
+## TECHNICKÁ UX PRAVIDLA DLE GOOGLE (2026)
+- Minimální velikost písma: 13px – Google penalizuje stránky s menším písmem při hodnocení skóre
+- Touch zóny na mobilu musí být správně implementovány (min. 44×44px, dostatečné mezery)
+- Mediální obsah (obrázky, video) na vstupní stránce zvyšuje skóre kvality stránky
+- Obsah mimo základní části e-shopu musí být správně vykreslen na mobilu
+- Interní prolinkování a práce s crawl budgetem přímo ovlivňuje viditelnost v Google
+- Vizuální obsah generovaný AI: Google jej dokáže identifikovat stejně jako textový AI obsah – používejte reálné fotografie
+
+## DŮVĚRYHODNOSTNÍ MATICE PRO E-SHOPY
+- Důvěryhodnost webu = kombinace technických, obsahových a vizuálních signálů
+- Klíčové složky: reálné recenze zákazníků, viditelný tým a kontakty, fyzická adresa, certifikáty a členství, média kde byl e-shop zmíněn
+- Rychlost webu jako trust signál: pomalý web = nedůvěryhodný web v mysli zákazníka
+- HTTPS, bezpečnostní certifikáty, jasná politika vrácení = základní hygienické minimum
+- Konzistentní vizuální identita napříč všemi kanály zvyšuje vnímanou profesionalitu
 `
 
 export async function POST(req) {
@@ -393,8 +423,8 @@ Pokud konkrétní e-shop neznáš, vycházej z obecné praxe v dané kategorii p
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8000,
+        model: 'claude-opus-4-5',
+        max_tokens: 4000,
         stream: true,
         system: systemPrompt,
         messages: [
