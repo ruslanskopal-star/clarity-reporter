@@ -4,11 +4,11 @@ import { NextResponse } from 'next/server'
 // KRIS - Knowledge-based Report Intelligence System
 // Engine postavený na metodologii ESHOP BOOSTER
 // + znalostní báze z blogu Ondřeje Ilinčeva (ilincev.com)
-// Verze 5.0 – vytěžený obsah článků (Batch 1–5, ~100 článků)
+// Verze 6.0 – vytěžený obsah článků (Batch 1–6, ~120 článků)
 // ============================================================
 
 const KRIS_KNOWLEDGE_BASE = `
-# KRIS ZNALOSTNÍ BÁZE v5 – ESHOP BOOSTER + ILINČEV METODOLOGIE
+# KRIS ZNALOSTNÍ BÁZE v6 – ESHOP BOOSTER + ILINČEV METODOLOGIE
 
 ## PRVNÍ DOJEM A DŮVĚRYHODNOST
 - Návštěvník si udělá první dojem za 0,1 sekundy – vizuální kvalita webu přímo ovlivňuje vnímanou důvěryhodnost
@@ -504,6 +504,124 @@ const KRIS_KNOWLEDGE_BASE = `
 - Nejlepší formáty: průvodci "jak na X", srovnání produktů, případové studie, FAQ
 - Evergreen obsah >> trendový obsah pro dlouhodobé výsledky
 - Produktový obsah: řešení konkrétního problému zákazníka > technické parametry
+
+## PŘEDKOŠÍK – 4 TYPY POTVRZENÍ PŘIDÁNÍ DO KOŠÍKU
+- Průměrně si přidá produkt do košíku 8,7 % návštěvníků e-shopu
+- Hlavní důvody nenakoupení: 61 % dodatečné náklady (doprava, daň), 35 % nutnost registrace, 27 % komplikovaná objednávka, 22 % technické problémy, 18 % nedůvěryhodný vzhled
+- 4 typy předkošíku: 1) Dropdown/slide-out box, 2) Pop-up (modal), 3) Mezistránka, 4) Přesměrování rovnou do košíku
+- Dropdown/slide-out: zobrazujte min. 7 sekund (ideálně 10); po odjetí myši 0,5s prodleva před zavřením; nevhodné kombinovat s jednokrokovým košíkem
+- Pop-up (modal): nejčastější v ČR, agresivnější ale přehledný; ukazuje: potvrzení přidání + náhled + vlastnosti produktu + tlačítka "Pokračovat" a "Do košíku"
+- Mezistránka: nevhodná pro standardní e-shopy (uživatelé si pletou s košíkem); vhodná jen pokud máte hodně přidružených služeb
+- Drop-down box: raritetní v ČR; zmátne uživatele krkolomným přechodem z tlačítka ke košíku
+- Dobré řešení pro luxusní zboží a e-shopy s desítkami položek (potraviny, korálky): disk notification (animace)
+- Vždy v předkošíku ukažte: jasné textové potvrzení + náhled + vlastnosti (velikost, barva) + CTA tlačítka
+
+## VÍCEKROKOVÝ VS. JEDNOKROKOVÝ KOŠÍK
+- Počet kroků v košíku NENÍ klíčový pro konverze – důležitá je jednoduchost každého kroku
+- Nejčastější pořadí kroků: Košík → Doprava a adresa → Platba → Souhrn → Děkujeme
+- Průměrná objednávka v USA má 23,5 prvků formuláře; ideál = 10 nebo méně
+- Vícekrokový košík: výhoda – nestresuje rozsahem na první pohled; nevýhoda – více kliknutí
+- Jednokrokový košík: výhoda – zákazník vidí vše co se od něj bude chtít; nevýhoda – může vizuálně vyděsit
+- Vancouver 2010 Olympics: přechod na jednokrokový košík = +21,8 % objednávek
+- Harmonikový (accordion) košík = zlatá střední cesta: kroky jsou na jedné stránce, ale minimalizované; otevírají se postupně; 14 % top US e-shopů (2012) → 32 % (2016)
+- Jednokrokový košík nevhodný pokud: hodně přizpůsobení (doprava, věrnostní program, slevové kódy, dárkové balení), hodně produktů, firma B2B
+- Progress bar: ukažte vždy – lidé rádi předem ví do čeho jdou; nad progress bar ikonu bezpečí
+- Tlačítko dalšího kroku: nejvýraznější prvek + konkrétní text (ne "Pokračovat" ale "Vybrat dopravu")
+- Vyhazením jednoho zbytečného tlačítka (registrace) vydělal Jared Spool klientovi 300 milionů USD ročně
+- Nutkání dokončit rozdělanou věc = silný psychologický princip → progress bar využívá toto
+
+## NÁKUPNÍ PERSONY A 4 NÁKUPNÍ MODALITY
+- Tony Zambito: persony = reprezentace zákazníků (motivace, cíle, přemýšlení, nákupní rozhodování)
+- Persony musí být živé a pomáhat při designu – ne nicneříkající životopisy z fotobankové fotky
+- Walmart případ: špatná otázka ("Chcete méně nepřehledné police?") → zbavili se 15 % sortimentu → prodělali 1,85 mld. USD
+- Johanna Weibe: "Je mi jedno pohlaví a kde bydlí. Potřebuji vědět co ho trápí a zda mám nejlepší řešení."
+- 4 NÁKUPNÍ MODALITY (jak zákazníci rozhodují):
+  1. Soutěživá (rychlé, racionální): chce důvody proč si vybrat, nestroluje → CTA nad ohybem, stručné
+  2. Metodická (pomalé, racionální): největší skupina; chce podrobný popis, funkce, propojení → detailní obsah
+  3. Spontánní (rychlé, emocionální): reaguje na emoce, design, personalizaci → vizuální, přesvědčivé
+  4. Humanistická (pomalé, emocionální): chce příběh, hodnoty, vztah → autentický obsah, komunita
+- Vědecké studie (Chapman 2008, Long 2009): persony prokazatelně zlepšují proces designu produktu
+- Šablona persony: demografie + motivace + frustrace + nákupní chování + citáty zákazníků
+- Vždy ověřte personu zpětně s reálnými zákazníky; vyberte pro každou personu jednoho reálného člověka
+
+## PŘÍPADOVKA: 680 % ZVÝŠENÍ OBRATU (8x-obrat)
+- Fitness Women e-shop: úpravou jedné produktové stránky +680 % obratu
+- Typický výsledek pro nové klienty (bez předchozí optimalizace): +50–100 % obratu za rok
+- Typický výsledek pro klienty kteří optimalizují: +10–40 % za rok
+- Česká banka (A/B test): 153 konverzí (původní) → 1185 konverzí (nová verze) = +675 %
+- CRO se vyplatí: pokud měsíční zisk přesahuje 150 000 Kč (ROI z optimalizace > náklady)
+- Jednorázová CRO analýza: pár desítek tisíc Kč → vrátí se zpět za měsíc
+- Pokud nikdo web neoptimalizoval: roční nárůst obratu 15–45 %
+- Pokud už optimalizujete: roční nárůst 5–15 %
+- Poměr CRO vs. PPC investice v zahraničí: 92:1 ve prospěch PPC (chyba!) – CRO je levnější dlouhodobě
+
+## PŘÍPADOVKA: TRENÝRKÁRNA – DETAILNÍ A/B VÝSLEDKY
+- Konverzní poměr na mobilu: 4,3 % (více než průměrný desktop)
+- Test patičky: schování patičky snížilo konverzi o 7 % a obrat o 9,4 % (důvěryhodnost e-shopu!)
+- Test redukované patičky: statisticky shodné výsledky jako plná patička → zachována plná
+- Test navigace v checkoutu: schování navigace snížilo obrat o 9,2 %, druhý test –11,7 % (zákazníci chtějí dokončit)
+- Test potvrzovací stránky: zrušení mezistránky po přidání do košíku = +14 % obratu
+- Test dvou dlaždic (mobil 390px+): +8 % konverze a obrat díky více viditelným produktům
+- Filtry: seřadit podle používanosti (Clarity) = Velikost → Značka → (ne cena)
+- Pamatovat vybranou velikost z filtru do detailu produktu
+- Použité filtry NAD výpisem + tlačítko "Zrušit vše"
+- Poučení: co funguje jinde, nemusí fungovat u vás → vždy testujte!
+
+## ANALYTIKA A GOOGLE ANALYTICS – CHYBY A BEST PRACTICES
+- "Bez pořádného UX/CRO výzkumu nevíte nic" – zapomeňte na best practices bez dat
+- Neexistují změny které "vždy zvýší konverze" – vše musí být otestováno pro váš e-shop
+- Nejčastější chyby v Google Analytics: nenastavené goals (cíle), neslinkované UTM parametry, nepoužitý enhanced e-commerce
+- Enhanced e-commerce: sleduje produktové zobrazení, přidání do košíku, checkout funnely, refundy
+- Analytics odpovídají na otázku CO – Hotjar/Clarity odpovídá na otázku PROČ
+- Sledujte: konverzní poměr z každého zdroje (PPC má jiný konverzní poměr než bannerová reklama!)
+- Případ: PPC ROAS 1250 % vs. bannerová reklama ROAS 25 % (konverzní poměr bannerů: 0,02 %)
+- Goals a funnely: kde přesně zákazníci opouštějí objednávkový proces?
+- Kvalita návštěvnosti > kvantita návštěvnosti – optimalizujte nejdřív zdroje, pak web
+- UTM parametry: vždy konzistentní pojmenování (email nebo e-mail nebo newsletter – ne mix!)
+- Vždy nejdřív zlepšit web PŘED spouštěním drahých PPC kampaní
+
+## PÍSMO NA WEBU – TYPOGRAFIE PRO VÝKON
+- Web je z 95 % písmo – správnou typografií zvýšíte čitelnost i konverze
+- Průměrně si uživatelé přečtou jen 20–25 % textu na stránce; ideální délka článku: 2–3 000 slov
+- Minimální velikost písma: 14 px (mobil), 16–18 px (desktop); čím větší obrazovka, tím větší písmo
+- Výška řádku (line-height): ideálně 1,5× velikost písma; menší písmo = větší řádkování
+- Délka řádku: max. 60–75 znaků (desktop), 30–40 znaků (mobil)
+- NIKDY nezarovnávejte text do bloku (justify) – vznikají bílé řeky v textu
+- Maximálně 2 řezy písma na webu; jasná typografická škála (H1 > H2 > H3 > body)
+- Patkové písmo (serif): historicky vnímáno jako důvěryhodnější (NYT studie: Baskerville +1,5 % důvěra)
+- Bezpatkové (sans-serif): vhodné pro UI a mobil; obě kategorie jsou podobně čitelné pokud jsou velké
+- Tmavý text na světlém pozadí: ideál; inverzní (světlý na tmavém) = čte se o 32 % pomaleji
+- Kontrastní poměr: minimálně 4,5:1 (normální text), 3:1 (velký text)
+- Vybírejte písma s podporou latinky s diakritikou (latin extended) pro češtinu
+- Google Fonts: bezplatné, prověřené, správná diakritika (zkontrolujte)
+- Nestahujte všechny řezy písma – každý +1 MB zpomaluje načítání a kazí konverze
+- Špatná typografie = pomalejší plnění úkolů, nižší úspěšnost objednávek (studie)
+- Typografická škála: prvky musí být tak různé velikostí, aby šly rozeznat i samostatně
+
+## KONVERZE A DATA-DRIVEN ROZHODOVÁNÍ
+- "Bez pořádného výzkumu nevíte nic" – best practices jsou výchozí bod, ne jistota
+- Neexistuje seznam věcí, které vám "vždy zvýší konverze" – každý e-shop je unikátní
+- CRO výzkumný proces: Analytika (CO) → Heatmapy/Nahrávky (JAK) → Uživatelské testování (PROČ) → Hypotéza → A/B test
+- Metriky k sledování: konverzní poměr, AOV, marže na objednávku, LTV, bounce rate, čas na stránce
+- Kvalita metrik: zisk > obrat > konverze > návštěvnost (nezaměňujte HITS: How Idiots Track Success)
+- CRO vs. PPC: CRO je fixní investice která vydělává dlouhodobě; PPC = nekonečné opakující se náklady
+- Návštěvnost nebo konverze? Nejdřív optimalizuj web → pak lákej návštěvníky
+- Pokud máte špatnou návštěvnost (nízký zájem): nejsnadnější zvýšení konverzí = lepší kvalita návštěv
+- Jedna korigovaná řádka kódu nebo text = někdy stovky % zlepšení (příklady: Obama kampaň +5 %)
+- Mousetracking (MS Clarity = zdarma): nejrychlejší způsob jak zjistit kde lidi klikají a kde odpadají
+
+## KOŠÍK A OBJEDNÁVKA – KLÍČOVÁ DATA
+- 68 % lidí si dá něco do košíku a nenakoupí (průměr; nejlepší e-shopy mají pod 50 %)
+- Hlavní důvody opuštění košíku: skryté poplatky v posledním kroku (61 %), nutnost registrace (35 %), komplikovaná objednávka (27 %), technické problémy (22 %), nedůvěryhodný vzhled (18 %)
+- 75 % zákazníků opouštějí košík s tím, že se vrátí → pošlete jim e-mail!
+- 3 ze 4 zákazníků se chce k nákupu vrátit → persistentní košík je nutnost
+- One-page checkout (Vancouver 2010): +21,8 % objednávek přechodem z vícekrokového
+- E-mail v objednávce: ptejte se CO NEJDŘÍVE (ke jménu, ne až na konci) → zachytíte ty co odpadnou dříve
+- Registrace PŘED nákupem = ztráta 20–25 % objednávek (dokumentováno opakovaně)
+- Přidání jednoho zbytečného kroku (registrace): Jared Spool ji odstranil = +300 mil. USD/rok pro klienta
+- 93 % lidí by nakoupilo více kdyby byla doprava zdarma
+- Slevový kód jako textové pole v košíku: zákazníci odcházejí hledat kód → nikdy to nevymáhají; dejte jako textový odkaz "dárkový poukaz"
+- Persistentní košík + wishlist: umožněte přesunutí z wishlistu do košíku jedním klikem
 `
 
 export async function POST(req) {
@@ -545,7 +663,7 @@ STREDNI PRIORITA: [název sekce]
 QUICK WINS: Rychlé výhry (do 1 týdne)
 1. [co jde udělat rychle a levně]
 
-Analyzuj tyto oblasti: homepage a první dojem, produktové stránky a fotografie, navigace a kategorie, košík a checkout, trust signály a recenze, mobilní verze, ceny a slevy, copywriting a mikrotexty, filtrování produktů, personalizace a e-mailing.
+Analyzuj tyto oblasti: homepage a první dojem, produktové stránky a fotografie, navigace a kategorie, košík a checkout (předkošík, typ košíku, formuláře), trust signály a recenze, mobilní verze, ceny a psychologie cen, copywriting a mikrotexty, filtrování produktů, personalizace a e-mailing, typografie a čitelnost, analytika a data-driven přístup.
 
 Pokud konkrétní e-shop neznáš, vycházej z obecné praxe v dané kategorii produktů a aplikuj znalostní bázi KRIS.`
 
