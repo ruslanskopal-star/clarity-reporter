@@ -108,6 +108,7 @@ export default function Home() {
               {error}
             </div>
           )}
+
           {loading && (
             <p style={{color:'#666',fontFamily:'Arial, sans-serif',fontSize:'14px',textAlign:'center',marginTop:'16px'}}>
               AI generuje analyzu, cca 30 sekund...
@@ -124,9 +125,13 @@ export default function Home() {
               </div>
               <div style={{background:'#FF6B00',borderRadius:'8px',padding:'8px 16px',fontSize:'12px',fontWeight:'700',color:'white',textTransform:'uppercase'}}>ESHOP BOOSTER</div>
             </div>
+
             <div style={{fontFamily:'Arial, sans-serif',lineHeight:'1.7'}}>
-              {analysis.split('\n').map((line, i) => (
-                <div key={i} style={
+              {analysis.split('\n').map((line, i) => {
+                const isH1 = line.startsWith('# ')
+                const isH2 = line.startsWith('## ')
+                const displayLine = isH1 ? line.slice(2) : isH2 ? line.slice(3) : line
+                const style =
                   line.includes('KRITICKE') || line.includes('KRITICK')
                     ? {color:'#ff4444',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ff4444',paddingLeft:'12px'}
                   : line.includes('VYSOKA')
@@ -135,6 +140,10 @@ export default function Home() {
                     ? {color:'#ffcc00',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #ffcc00',paddingLeft:'12px'}
                   : line.includes('QUICK')
                     ? {color:'#00ccff',fontWeight:'700',fontSize:'17px',marginTop:'24px',marginBottom:'8px',borderLeft:'4px solid #00ccff',paddingLeft:'12px'}
+                  : isH1
+                    ? {color:'white',fontWeight:'900',fontSize:'22px',marginTop:'28px',marginBottom:'10px'}
+                  : isH2
+                    ? {color:'#FF6B00',fontWeight:'700',fontSize:'15px',marginTop:'20px',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px'}
                   : /^\d+\./.test(line)
                     ? {color:'#ddd',marginTop:'12px',paddingLeft:'8px'}
                   : line.startsWith('- ')
@@ -142,10 +151,8 @@ export default function Home() {
                   : line.trim() === ''
                     ? {height:'4px'}
                   : {color:'#ccc',marginTop:'6px',fontSize:'15px'}
-                }>
-                  {line || ' '}
-                </div>
-              ))}
+                return <div key={i} style={style}>{displayLine || ' '}</div>
+              })}
             </div>
           </div>
         )}
