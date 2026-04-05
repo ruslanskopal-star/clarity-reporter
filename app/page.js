@@ -1,6 +1,22 @@
 "use client";
 import { useState } from "react";
 
+function EshopBoosterLogo() {
+  return (
+    <svg width="160" height="56" viewBox="0 0 160 56" xmlns="http://www.w3.org/2000/svg">
+      <rect width="160" height="56" rx="6" fill="white"/>
+      <text x="12" y="26" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="22" fill="#111" letterSpacing="1">ESH</text>
+      <g transform="translate(71, 6)">
+        <ellipse cx="11" cy="12" rx="11" ry="12" fill="#111"/>
+        <ellipse cx="11" cy="12" rx="7" ry="8" fill="white"/>
+        <polygon points="11,4 7,10 15,10" fill="#111"/>
+      </g>
+      <text x="93" y="26" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="22" fill="#111" letterSpacing="1">P</text>
+      <text x="12" y="48" fontFamily="Arial Black, Arial" fontWeight="900" fontSize="16" fill="#111" letterSpacing="3">BOOSTER</text>
+    </svg>
+  );
+}
+
 export default function Home() {
   const [client, setClient] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,16 +50,16 @@ export default function Home() {
   }
 
   function getLineStyle(line) {
-    if (line.indexOf("KRITICKE") !== -1 || line.indexOf("KRITICK") !== -1 || line.indexOf("\uD83D\uDD34") !== -1) {
+    if (line.indexOf("KRITICKE") !== -1 || line.indexOf("KRITICK") !== -1) {
       return { color: "#ff4444", fontWeight: "700", fontSize: "17px", marginTop: "24px", marginBottom: "8px", borderLeft: "4px solid #ff4444", paddingLeft: "12px" };
     }
-    if (line.indexOf("VYSOKA") !== -1 || line.indexOf("\uD83D\uDFE0") !== -1) {
+    if (line.indexOf("VYSOKA") !== -1) {
       return { color: "#FF6B00", fontWeight: "700", fontSize: "17px", marginTop: "24px", marginBottom: "8px", borderLeft: "4px solid #FF6B00", paddingLeft: "12px" };
     }
-    if (line.indexOf("STREDNI") !== -1 || line.indexOf("\uD83D\uDFE1") !== -1) {
+    if (line.indexOf("STREDNI") !== -1) {
       return { color: "#ffcc00", fontWeight: "700", fontSize: "17px", marginTop: "24px", marginBottom: "8px", borderLeft: "4px solid #ffcc00", paddingLeft: "12px" };
     }
-    if (line.indexOf("QUICK") !== -1 || line.indexOf("\u26A1") !== -1) {
+    if (line.indexOf("QUICK") !== -1) {
       return { color: "#00ccff", fontWeight: "700", fontSize: "17px", marginTop: "24px", marginBottom: "8px", borderLeft: "4px solid #00ccff", paddingLeft: "12px" };
     }
     if (/^\d+\./.test(line)) {
@@ -69,9 +85,8 @@ export default function Home() {
       <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px" }}>
 
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ display: "inline-block", background: "white", padding: "10px 22px", borderRadius: "8px", marginBottom: "20px" }}>
-            <span style={{ fontSize: "20px", fontWeight: "900", color: "#111" }}>ESHOP</span>
-            <span style={{ fontSize: "20px", fontWeight: "900", color: "#FF6B00" }}>BOOSTER</span>
+          <div style={{ display: "inline-block", marginBottom: "20px" }}>
+            <EshopBoosterLogo />
           </div>
           <h1 style={{ fontSize: "32px", fontWeight: "900", color: "white", margin: "0 0 6px 0", textTransform: "uppercase" }}>CRO Analyza</h1>
           <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#FF6B00", margin: "0", textTransform: "uppercase", letterSpacing: "3px" }}>Clarity Reporter</h2>
@@ -88,6 +103,8 @@ export default function Home() {
               placeholder="napr. Profi-DJ, Fanda-NHL.cz..."
               onKeyDown={function(e) { if (e.key === "Enter") run(); }}
               style={{ flex: 1, padding: "14px 18px", fontSize: "16px", background: "#111", border: "2px solid #333", borderRadius: "8px", color: "white", fontFamily: "Arial, sans-serif", outline: "none" }}
+              onFocus={function(e) { e.target.style.borderColor = "#FF6B00"; }}
+              onBlur={function(e) { e.target.style.borderColor = "#333"; }}
             />
             <button
               onClick={run}
