@@ -7,9 +7,9 @@
 - Vercel Project ID: prj_c6U3B3yWLJn9130Cpb9U50f42uPC
 
 ## Aktuální stav
-- route.js = route_v6_edge_v20 (vážené skóre 15/20/10/20/15/10/10)
+- route.js = route_v6_edge_v21 (vážené skóre 15/20/10/20/15/10/10)
 - page.js = page_v16
-- Další verze: route → v21, v22... | page → v17...
+- Další verze: route → v22, v23... | page → v17...
 
 ## Jak testovat (BEZ BROWSERU)
 node scripts/kris-test.js davona.cz
@@ -36,10 +36,60 @@ node scripts/kris-test.js davona.cz
 4. Objednávkový proces 20% | 5. Homepage 15% | 6. SEO 10% | 7. Zákaznická péče 10%
 
 ## Zásobník e-shopů (nepoužité)
-davona.cz | v-mart.cz | kava.cz | moda-pradlo.cz | SpinKids.cz
-francobene.cz | profi-dj.cz | golden-life.cz | fanda-nhl.cz | naboso.cz
-krmimkvalitne.cz | galanterie-cendulka.cz | bezvazbozi.cz | haltimo.com (v16, 52/100) | elenys.cz (v17, 62/100)
-zahradnizabava.cz (v18, 58/100) | vikio.cz (v19, 41/100)
+vonavydomov.eu
+mojeromantika.cz
+farmamix.sk
+garazujeme.cz
+sana-store.cz
+utrhni.cz
+levelys.sk
+lepsizivot.shop
+cestouprirody.eu
+inzep.cz
+pyzamka.cz
+deeplove.cz
+silluro.cz
+olashop.cz
+cyklodiskont.cz
+marieli.cz
+momenti.cz
+sparkys.cz
+bonfood.cz
+vicnezkucharka.cz
+salveo.cz
+malinna.com
+witsocks.cz
+fixy.cz
+eurokoberce.eu
+zelenazeme.cz
+vercajk-shop.cz
+smatab.cz
+horakgastro.com
+leoness.sk
+lovesilk.sk
+just.love
+pranita.cz
+instalshop.sk
+kraloveskoly.cz
+katea.sk
+represhop.eu
+drdlik.cz
+spime.cz
+papery.cz
+slickstyle.cz
+kavatrobica.cz
+mixton.cz
+simply-beauty.eu
+husse.cz
+luxelleparis.com
+lyss.cz
+dapi.cz
+drogeriadomov.sk
+facederma.sk
+
+## Použité e-shopy
+cubenest.cz (v16, 64/100) | haltimo.com (v16, 52/100) | elenys.cz (v17, 62/100)
+zahradnizabava.cz (v18, 58/100) | vikio.cz (v19, 41/100) | davona.cz (v20, 51/100) | v-mart.cz (v21, ?)
 
 ## Zakázané v route.js
 - ROADMAP, IMPLEMENTAČNÍ PLÁN, TÝDENNÍ PLÁN jako extra sekce
