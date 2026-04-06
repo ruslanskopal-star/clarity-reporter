@@ -357,7 +357,11 @@ ${scoringAreas}
 [2 vety komentar]
 
 CO DELA DOBRE
-Top 3 silne stranky s vysvetlenim "Proc to funguje: [konkretni duvod]"
+Tato sekce musi mit PRESNE 3 body. Kazdy bod musi:
+- Zacinat konkretnim nazvem prvku (napr. "Produktove fotografie", "Trust badge u kosiku", "Filtrovani kategorii")
+- Mit 2-3 vety: co konkretne existuje na webu + proc to funguje konverzne
+- Odkazovat na konkretni sekci nebo stranku e-shopu
+- ZAKAZANO: genericke chvaly jako "ma dobre produkty", "hezky design", "prehledny web" bez konkretniho dukazu
 
 TOP 5 QUICK WINS (od nejvetsiho dopadu)
 Kazdy Quick Win musi mit PRESNE tuto strukturu:
