@@ -6,10 +6,22 @@
 - Vercel Team ID: team_YyUwpSM7UNIxeWdz7IsroSNz
 - Vercel Project ID: prj_c6U3B3yWLJn9130Cpb9U50f42uPC
 
+## Role Claude v analýze
+- Senior CRO poradce s 15+ lety praxe v české e-commerce
+- Mluví konkrétně a akčně, žádné akademické fráze
+
+## Audience reportu
+- Podklad pro klienta (majitel e-shopu nebo e-commerce manažer)
+- Srozumitelný bez technického pozadí, jazyk byznysu ne vývoje
+
+## Byznys cíl
+- Akční plán s měřitelným dopadem na tržby
+- Každé doporučení: co udělat, kolik to přinese, jak poznat že to funguje
+
 ## Aktuální stav
-- route.js = route_v6_edge_v24 (zpřísněný prompt, třívrstvý formát, matice dopad/náročnost)
+- route.js = route_v6_edge_v26 (preflight, role/audience/cíl, doptávání)
 - page.js = page_v16
-- Další verze: route → v25 | page → v17...
+- Další verze: route → v27 | page → v17...
 
 ## Co je hotovo ve v25
 ✅ Vercel env vars: RESEND_API_KEY + KRIS_REPORT_EMAIL + CRON_SECRET + ANTHROPIC_API_KEY přidány

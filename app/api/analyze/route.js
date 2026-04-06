@@ -1,11 +1,9 @@
-// route_v6_edge_v23.js
-// Zmeny oproti v22:
-// 1. Clarity API realna data (numOfDays=3, mobile+desktop breakdown)
-// 2. Multi-page crawl: homepage + kosik + kategorie + detail produktu
-// 3. Dva rezimy: "quick" (top 10 priorit) a "full" (sekcni analyza po typech stranek)
-// 4. Tri vrstvy doporuceni: [CRO PRINCIP] + [SEGMENT] + [CLARITY DATA]
-// 5. Impact (1-5) vs Narocnost (1-5) matice ke kazdemu doporuceni
-// 6. Sekce 📱 MOBIL a 🖥️ DESKTOP zvlast v Clarity kontextu
+// route_v6_edge_v26.js
+// Zmeny oproti v24:
+// 1. Preflight handler: action=preflight → detekce kategorie + dynamicke otazky
+// 2. ROLE/AUDIENCE/BYZNYS CIL v system promptu
+// 3. shopContext (segment, obrat, problem) injektovan do promptu
+// 4. Tri vrstvy + matice dopad/narocnost (z v24)
 
 export const runtime = 'edge'
 
@@ -479,7 +477,7 @@ async function fetchPageMeta(url) {
 
 export async function POST(req) {
   try {
-    const { clientUrl, withClarity, reportMode, shopContext } = await req.json()
+    const { clientUrl, withClarity, reportMode, shopContext, action } = await req.json()
 
     if (!clientUrl) {
       return new Response(JSON.stringify({ error: 'Chybi URL klienta' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -492,6 +490,48 @@ export async function POST(req) {
 
     const hostname = clientUrl.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
     const baseUrl = clientUrl.startsWith('http') ? clientUrl : `https://${clientUrl}`
+
+    // Preflight: nacti homepage, detekuj kategorii, vrat otazky pro kontext
+    if (action === 'preflight') {
+      const homepageHtml = await fetchOnePage(baseUrl, 10000)
+      const meta = parseMeta(homepageHtml, baseUrl)
+      const metaSummary = meta
+        ? `Title: "${meta.title || '?'}", H1: "${meta.h1 || '?'}", Description: "${meta.description || '?'}"`
+        : 'Meta data se nepodarilo nacist.'
+
+      try {
+        const preflightRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-3-5-20241022',
+            max_tokens: 300,
+            system: 'Jsi CRO analytik. Na zaklade meta dat e-shopu odpovez POUZE validnim JSON objektem bez markdownu. Format: {"detectedCategory":"nazev kategorie cesky","questions":[{"id":"segment","label":"V jakem segmentu pusobite?","options":["hracky","moda","kosmetika","elektronika","nabytek","sport","potraviny","jine"],"detected":"nejpravdepodobnejsi volba"},{"id":"obrat","label":"Jaky je vas rocni obrat?","options":["do1m","1-10m","10-50m","50m+"]},{"id":"problem","label":"Co vas nejvic trapi?","options":["nizka-konverze","opusteny-kosik","nizky-aov","bounce","mobilni","jine"]}]}',
+            messages: [{ role: 'user', content: `E-shop: ${clientUrl}\n${metaSummary}` }],
+          }),
+        })
+        if (preflightRes.ok) {
+          const preflightData = await preflightRes.json()
+          const text = preflightData.content?.[0]?.text || ''
+          const jsonMatch = text.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0])
+            return new Response(JSON.stringify(parsed), { headers: { 'Content-Type': 'application/json' } })
+          }
+        }
+      } catch (e) {
+        console.error('Preflight parse error:', e.message)
+      }
+      // Fallback — vrat staticke otazky
+      return new Response(JSON.stringify({
+        detectedCategory: null,
+        questions: [
+          { id: 'segment', label: 'V jakem segmentu pusobite?', options: ['hracky','moda','kosmetika','elektronika','nabytek','sport','potraviny','jine'] },
+          { id: 'obrat', label: 'Jaky je vas rocni obrat?', options: ['do1m','1-10m','10-50m','50m+'] },
+          { id: 'problem', label: 'Co vas nejvic trapi?', options: ['nizka-konverze','opusteny-kosik','nizky-aov','bounce','mobilni','jine'] },
+        ],
+      }), { headers: { 'Content-Type': 'application/json' } })
+    }
 
     const [crawlData, clarityData] = await Promise.all([
       fetchMultiPageData(baseUrl),
@@ -662,7 +702,13 @@ Format: "[cislo]. [Kde v Clarity] → [Co hledat] → [Jak interpretovat]"
 Kazda polozka specificka pro TENTO web a kategorii.
 `
 
-    const systemPrompt = `Jsi KRIS – Knowledge-based Report Intelligence System, expert CRO analytik e-shopu metodologie ESHOP BOOSTER.
+    const systemPrompt = `ROLE: Jsi KRIS – Knowledge-based Report Intelligence System. Senior CRO poradce s 15+ lety praxe v ceske e-commerce. Mluvis konkretne a akcne, zadne akademicke fraze.
+
+AUDIENCE: Vystup je podklad pro klienta (majitel e-shopu nebo e-commerce manazer). Musi byt srozumitelny bez technickeho pozadi. Pouzivej jazyk, kteremu rozumi clovek co ridi byznys, ne vyvojar.
+
+BYZNYS CIL: Dodat akcni plan s meritelnym dopadem na trzby. Zadna akademicka analyza. Kazde doporuceni musi odpovedet: "Co presne udelat, kolik to prinese, jak poznam ze to funguje."
+
+Metodologie: ESHOP BOOSTER.
 
 Znalostni baze:
 ${KRIS_KNOWLEDGE_BASE}
