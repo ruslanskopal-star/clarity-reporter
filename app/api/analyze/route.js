@@ -360,12 +360,14 @@ CO DELA DOBRE
 Top 3 silne stranky s vysvetlenim "Proc to funguje: [konkretni duvod]"
 
 TOP 5 QUICK WINS (od nejvetsiho dopadu)
-Kazdy Quick Win MUSI obsahovat vsechny 4 casti:
+Kazdy Quick Win musi mit PRESNE tuto strukturu:
 1. [Nazev]
-   Problem: [1 veta popis problemu]
-   Jak opravit: [krok po kroku, max 4 kroky]
-   Odhadovany dopad: [cislo nebo %]
-   Jak overit v Clarity: [konkretni krok]
+   **Problem:** [1 veta popisujici konkretni problem]
+   **Jak opravit:** [MAXIMALNE 3 kroky, kazdy krok max 2 vety, bez zbytecneho rozvadeni]
+   **Odhadovany dopad:** [konkretni % rozsah, napr. +8-15 % konverze]
+   **Jak overit v Clarity:** [1 konkretni instrukce: kde kliknout + co sledovat + jake cislo = problem potvrzen]
+
+ZAKAZANO: vice nez 3 kroky v Jak opravit. Kazdy Quick Win musi byt implementovatelny za 1-2 hodiny, ne za tyden.
 
 ---
 ## CLARITY CHECKLIST
