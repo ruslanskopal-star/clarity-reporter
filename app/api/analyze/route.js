@@ -566,15 +566,31 @@ PRAVIDLO 9 – NO VERSION FOOTER: Na konci NIKDY nepridavej nazev systemu, verzi
 PRAVIDLO 10 – MAX 6 STRAN: Celkova delka analyzy MAXIMALNE 6 stran A4. Pokud bys presahl, zkrat: Quick Wins na max 3 vety, Stredni priority na 1-2 vety, Roadmap na jeden radek na polozku.
 `
 
-    const threeLayerFormat = `
-FORMAT TRI VRSTEV pro kazde doporuceni:
-🎯 [CRO PRINCIP]: obecny CRO princip proc tato zmena funguje (1 veta)
-👥 [SEGMENT]: zkusenosti z podobnych e-shopu v teto kategorii (1 veta s konkretnim dopadem)
-📊 [CLARITY DATA]: ${clarityData ? 'cituj konkretni hodnotu z realnych Clarity dat tohoto webu' : 'co by Clarity data ukazala — jak overit v Clarity (1 konkretni krok)'}
+    const clarityLayerText = clarityData
+      ? 'Cituj KONKRETNI CISLO z realnych dat tohoto webu (viz REALNA DATA Z CLARITY nahore). Priklad: "Dead click rate je 1,59 % — to znamena ze uzivatele klikaji na prvky ktere nejsou klikatelne."'
+      : 'Uved konkretni krok jak tuto oblast overit v Clarity. Priklad: "Otevri Heatmapu stranky /kosik → zkontroluj zda uzivatele klikaji na pole slevoveho kodu."'
 
-IMPACT vs NAROCNOST pro kazde doporuceni:
-Dopad: [1-5 puntiku] | Narocnost: [1-5 puntiku] | Cas implementace: [odhad]
-(1 puntikem = nizky, 5 puntiku = vysoky)
+    const threeLayerFormat = `
+KRITICKE: Kazde doporuceni MUSI obsahovat PRESNE TYTO TRI RADKY ve formatu nize. Nikdy je nevynechej, nikdy je nespoj do jednoho odstavce.
+
+🎯 **[CRO PRINCIP]:** [1 veta — obecny princip proc tato zmena zvysuje konverzi]
+👥 **[SEGMENT]:** [1 veta — konkretni zkusenost z podobnych e-shopu v teto kategorii, idealne s cislem dopadu]
+📊 **[CLARITY DATA]:** ${clarityLayerText}
+
+PRIKLAD SPRAVNEHO VYSTUPU (pro doporuceni o slevovem kodu):
+🎯 **[CRO PRINCIP]:** Viditelne pole pro slevovy kod aktivuje u zakaznika vedomí ze "sleva existuje ale ja ji nemam" a zpusobuje odchod na agregatory pred dokoncenim objednavky.
+👥 **[SEGMENT]:** E-shopy s detskym zbozim ktere skryly slevovy kod za checkbox zaznamenaly prumerny rust konverze z kosiku o 11 %.
+📊 **[CLARITY DATA]:** ${clarityData ? 'Podle Clarity dat ma tento web dead click rate 1,59 % — zkontroluj zda jsou rage clicks soustredeny na oblast slevoveho kodu v nahrávkach segmentu "navstivil kosik ale nenakoupil".' : 'Otevri Recordings → filtr "navstivil kosik ale nenakoupil" → hledej zaznamy kde uzivatel klikne do pole slevoveho kodu a pak opusti stranku do 60 sekund.'}
+
+PRIKLAD SPATNEHO VYSTUPU (ZAKAZANO):
+"Doporucujeme skryt slevovy kod. Toto zvysi konverze." — TOTO JE ZAKAZANO, chybi vsechny tri vrstvy.
+
+MATICE DOPAD vs NAROCNOST — POVINNY FORMAT pro kazde doporuceni:
+**Dopad:** ●●●●○ (4/5) | **Narocnost:** ●●○○○ (2/5) | **Cas:** [konkretni odhad, napr. "2 hodiny"]
+Pravidla:
+- Dopad 5/5 = +15 % a vice konverze | Dopad 1/5 = marginalní zmena
+- Narocnost 5/5 = tyden+ vyvoje | Narocnost 1/5 = zmena textu nebo CSS do 30 minut
+- Puntiky: pouzivej symbol ● pro aktivni a ○ pro neaktivni (celkem vzdy 5 symbolu)
 `
 
     const structureInstruction = isTop10 ? `
