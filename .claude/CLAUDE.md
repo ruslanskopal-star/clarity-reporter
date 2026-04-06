@@ -8,9 +8,9 @@
 
 
 ## Aktuální stav
-- route.js = route_v6_edge_v26 (preflight, role/audience/cíl, doptávání)
-- page.js = page_v16
-- Další verze: route → v27 | page → v17...
+- route.js = route_v6_edge_v26 (preflight, role/audience/cíl, doptávání, upozornění malý vzorek)
+- page.js = page_v17
+- Další verze: route → v27 | page → v18
 
 ## Co je hotovo ve v25
 ✅ Vercel env vars: RESEND_API_KEY + KRIS_REPORT_EMAIL + CRON_SECRET + ANTHROPIC_API_KEY přidány
@@ -18,17 +18,19 @@
 ✅ vercel.json: cron každý den v 8:00 UTC aktivní
 
 ## Co je hotovo ve v26
-✅ Doptávání — 3 volitelné selecty v UI (segment, roční obrat, hlavní problém)
-✅ shopContext injektován do system promptu — benchmarky a Quick Wins kalibrovány dle profilu
-✅ Selecty se zvýrazní oranžově když jsou vyplněny
+✅ Preflight dialog — detekce kategorie + 3 otázky (segment, obrat, hlavní problém)
+✅ Role/Audience/Byznys cíl v systemPrompt
+✅ Upozornění na malý vzorek Clarity dat (<500 sessions za 3 dny)
+✅ Clarity tokeny — 8 e-shopů na Vercelu i lokálně
+✅ Runtime nodejs + maxDuration 300s (fix timeout)
 
 ## Co zbývá — v27
-❌ Test v26 na davona.cz nebo eppi.cz s vyplněným kontextem
+❌ Otestovat preflight UI živě na cro-report.vercel.app
 ❌ Knowledge base segmenty — vyplnit kosmetika.md, moda.md, elektronika.md
 ❌ Segment-specifické benchmarky v promptu (dle vybraného segmentu)
 
 ## Další krok
-v27: test doptávání na reálném e-shopu, pak vyplnit knowledge base pro top 3 segmenty
+v27: otestovat preflight UI, vyplnit knowledge base pro top 3 segmenty
 
 ## Jak testovat (BEZ BROWSERU)
 node scripts/kris-test.js davona.cz
@@ -82,7 +84,7 @@ spinkids.si
 spinkids.sk
 
 ## Použité e-shopy
-davona.cz (v20, 51/100) | v-mart.cz (v21, 54/100) | spinkids.sk (v24, 52/100)
+davona.cz (v20, 51/100) | v-mart.cz (v21, 54/100) | spinkids.sk (v24, 52/100) | eppi.cz (v26, 54/100 s Clarity)
 
 ## Zakázané v route.js
 - ROADMAP, IMPLEMENTAČNÍ PLÁN, TÝDENNÍ PLÁN jako extra sekce
