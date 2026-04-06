@@ -31,7 +31,7 @@ export async function GET(req) {
     <p><em>Žádné nové konflikty.</em></p>
     <h3>🔄 Stav systému</h3>
     <ul>
-      <li>route.js: route_v6_edge_v23</li>
+      <li>route.js: route_v6_edge_v24</li>
       <li>Clarity API: aktivní</li>
       <li>Vercel: online</li>
     </ul>
@@ -44,7 +44,7 @@ export async function GET(req) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'KRIS <kris@cro-report.vercel.app>',
+      from: 'KRIS <onboarding@resend.dev>',
       to: [toEmail],
       subject: `KRIS Denní souhrn — ${today}`,
       html,
