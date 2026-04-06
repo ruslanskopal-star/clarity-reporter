@@ -602,7 +602,7 @@ export default function Home() {
                     <div style={{color:'#555',fontSize:'11px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'10px',fontFamily:'Arial,sans-serif'}}>Upresnete kontext pro presnejsi analyzu</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px'}}>
                       {[
-                        { val: shopSegment, set: setShopSegment, placeholder: 'Segment', opts: [['hracky','Hracky'],['moda','Moda a obleceni'],['kosmetika','Kosmetika'],['elektronika','Elektronika'],['nabytek','Nabytek a bydleni'],['sport','Sport a outdoor'],['potraviny','Potraviny'],['jine','Jine']] },
+                        { val: shopSegment, set: setShopSegment, placeholder: 'Segment', opts: [['hracky','Hracky'],['moda','Moda a obleceni'],['kosmetika','Kosmetika'],['sperky','Sperky a zlatnictvi'],['elektronika','Elektronika'],['nabytek','Nabytek a bydleni'],['sport','Sport a outdoor'],['potraviny','Potraviny'],['jine','Jine']] },
                         { val: shopObrat, set: setShopObrat, placeholder: 'Rocni obrat', opts: [['do1m','Do 1M Kc'],['1-10m','1-10M Kc'],['10-50m','10-50M Kc'],['50m+','50M+ Kc']] },
                         { val: shopProblem, set: setShopProblem, placeholder: 'Hlavni problem', opts: [['nizka-konverze','Nizka konverze'],['opusteny-kosik','Opusteny kosik'],['nizky-aov','Nizky prumer objednavky'],['bounce','Vysoky bounce rate'],['mobilni','Problemy na mobilu'],['jine','Jine']] },
                       ].map(function(sel, si) {
