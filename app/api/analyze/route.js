@@ -278,23 +278,29 @@ export async function POST(req) {
     const isTop10 = reportMode === 'top10'
 
     const scoringAreas = `
-OSMI STANDARDNICH OBLASTI SKORE (pouzij vzdy tychto 8, poradi muze zmenit dle priority):
-1. Duveryhodnost a trust signaly
-2. Produktove stranky a obsah
-3. Navigace a vyhledavani
-4. Mobilni verze
-5. Objednavkovy proces
-6. SEO a strukturovana data
-7. Cenotvorba a konverzni prvky
-8. Copywriting a texty
+HODNOCENE OBLASTI A VAHY (pouzij vzdy presne tychto 7 oblasti + Mobilni verze jako N/A):
+1. Duveryhodnost a trust signaly (vaha 15 %)
+2. Produktove stranky a obsah (vaha 20 %)
+3. Navigace a vyhledavani (vaha 10 %)
+4. Objednavkovy proces (vaha 20 %)
+5. Homepage a prvni dojem (vaha 15 %)
+6. SEO a technicka zakladna (vaha 10 %)
+7. Zakaznicka pece a retence (vaha 10 %)
+8. Mobilni verze (N/A — nezapocitava se do skore)
 
-Format pro kazdou oblast: "Oblast: X/10"
+Format pro kazdou oblast: "Oblast (vaha X %): skore/10"
 **Komentar:** [1 veta: konkretni problem nebo silna stranka ktera skore zpusobuje] + [1 veta: konkretni priklad z tohoto e-shopu — nazev prvku, URL, nebo pozorovani]
 ZAKAZANO: Komentare jako "Tato oblast je prumerna" nebo "Web ma prostor pro zlepseni" bez konkretniho prikladu. Kazdy komentar musi byt tak specificky, ze nemuze platit pro jiny e-shop.
+
+VYPOCET CELKOVEHO SKORE: Celkove skore MUSI byt vypocitano jako vazeny prumer 7 oblasti (Mobilni verze se nezapocitava).
+Vzorec: (skore1 x 15) + (skore2 x 20) + (skore3 x 10) + (skore4 x 20) + (skore5 x 15) + (skore6 x 10) + (skore7 x 10) = celkove skore ze 100.
+Za celkovym skorem uved vypocet v zavorkach, napr.: (4x15 + 6x20 + 5x10 + 4x20 + 5x15 + 5x10 + 4x10 = 490 → 49/100)
+ZAKAZANO: Celkove skore odhadnout bez vypoctu z podskore.
+
 Pozor: Skore musi byt relativni vuci kategorii a velikosti e-shopu.
 Niche specializovany e-shop hodnoť vyse za autenticky obsah a odbornost.
 
-PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze" pokud nemas Clarity data ani primy pristup k mobilni verzi. Uved: "N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze." VSECHNY OSTATNI oblasti (Navigace, Objednavkovy proces, Duveryhodnost, SEO atd.) MUSI vzdy dostat konkretni skore 1-10 s hypotezou ve formatu: "Pravdepodobne [problem] — pokud ano, dopad je [X]%. Jak overit v Clarity: [konkretni krok]." Nikdy nepouzivej N/A pro jine oblasti nez Mobilni verze.
+PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze". Uved: "N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze." VSECHNY OSTATNI oblasti MUSI vzdy dostat konkretni skore 1-10 s hypotezou ve formatu: "Pravdepodobne [problem] — pokud ano, dopad je [X]%. Jak overit v Clarity: [konkretni krok]." Nikdy nepouzivej N/A pro jine oblasti.
 `
 
     const strictRules = `
