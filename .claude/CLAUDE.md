@@ -7,27 +7,21 @@
 - Vercel Project ID: prj_c6U3B3yWLJn9130Cpb9U50f42uPC
 
 ## Aktuální stav
-- route.js = route_v6_edge_v23 (multi-page crawl, Clarity API, sekční analýza, dva módy)
+- route.js = route_v6_edge_v24 (zpřísněný prompt, třívrstvý formát, matice dopad/náročnost)
 - page.js = page_v16
-- Další verze: route → v24 | page → v17...
+- Další verze: route → v25 | page → v17...
 
-## Co je hotovo ve v23
-✅ Clarity API — reálná data (numOfDays=3, mobile+desktop breakdown)
-✅ Multi-page crawl — homepage + košík + kategorie + detail produktu paralelně
-✅ Dva módy: "quick" (top 10 priorit) a "full" (sekční analýza po typech stránek)
-✅ Sekční analýza: 🏠 Homepage / 🔍 Navigace / 📦 Kategorie / 🛍️ Detail / 🛒 Košík / 💳 Checkout
-✅ Knowledge base soubory: knowledge/sekce-*.md, knowledge/segmenty/, knowledge/reference-weby.md
-✅ Cron endpoint: /api/cron/daily-report (čeká na RESEND_API_KEY + KRIS_REPORT_EMAIL v env)
-✅ vercel.json: cron každý den v 8:00
+## Co je hotovo ve v25
+✅ Vercel env vars: RESEND_API_KEY + KRIS_REPORT_EMAIL + CRON_SECRET + ANTHROPIC_API_KEY přidány
+✅ Cron endpoint /api/cron/daily-report — 401 bez tokenu ✓, test s tokenem čeká na potvrzení
+✅ vercel.json: cron každý den v 8:00 UTC aktivní
 
-## Co zbývá — v24
-❌ Třívrstvý formát [CRO PRINCIP] / [SEGMENT] / [CLARITY DATA] — model ho nepoužívá, zpřísnit prompt
-❌ Impact/Náročnost matice (●●●●○) — model ho nepoužívá, zpřísnit prompt
-❌ Resend denní email — přidat RESEND_API_KEY + KRIS_REPORT_EMAIL do Vercel env
-❌ Doptávání — identifikace chybějícího kontextu (segment, obrat, hlavní problém)
+## Co zbývá — v26
+❌ Doptávání — identifikace chybějícího kontextu (segment, obrat, hlavní problém) před analýzou
+❌ Potvrdit cron test (spustit s CRON_SECRET a ověřit {"ok":true})
 
 ## Další krok
-v24: zpřísnit prompt pro třívrstvý formát a matici, test na spinkids.sk quick mód
+v26: implementovat doptávání — pre-flight dialog před analýzou pro zjištění segmentu, obratu, hlavního problému
 
 ## Jak testovat (BEZ BROWSERU)
 node scripts/kris-test.js davona.cz
@@ -81,7 +75,7 @@ spinkids.si
 spinkids.sk
 
 ## Použité e-shopy
-davona.cz (v20, 51/100) | v-mart.cz (v21, 54/100)
+davona.cz (v20, 51/100) | v-mart.cz (v21, 54/100) | spinkids.sk (v24, 52/100)
 
 ## Zakázané v route.js
 - ROADMAP, IMPLEMENTAČNÍ PLÁN, TÝDENNÍ PLÁN jako extra sekce
