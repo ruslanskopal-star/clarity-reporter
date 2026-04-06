@@ -1,3 +1,4 @@
+// @claude timeout=300
 #!/usr/bin/env node
 // KRIS iterační tester — volá live API přímo, bez browseru
 // Použití: node scripts/kris-test.js davona.cz
@@ -11,11 +12,16 @@ async function testKris(shopUrl) {
   console.log(`\n🔍 Testuji: ${shopUrl}\n`);
   const start = Date.now();
 
+  const controller = new AbortController();
+  const fetchTimeout = setTimeout(() => controller.abort(), 240000);
+
   const res = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clientUrl: shopUrl, reportMode: 'full', withClarity: true })
+    body: JSON.stringify({ clientUrl: shopUrl, reportMode: 'full', withClarity: true }),
+    signal: controller.signal
   });
+  clearTimeout(fetchTimeout);
 
   if (!res.ok) { console.error('API error:', res.status, await res.text()); process.exit(1); }
 
