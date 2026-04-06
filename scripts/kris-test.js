@@ -62,7 +62,7 @@ async function testKris(shopUrl) {
   const tl = t.toLowerCase();
   const results = [
     { nazev: '4 sekce (SKÓRE/CO DĚLÁ DOBŘE/QUICK WINS/CLARITY CHECKLIST)', ok: t.includes('SKORE') || t.includes('SKÓRE') },
-    { nazev: 'CO DĚLÁ DOBŘE přítomna', ok: tl.includes('co dělá dobře') || tl.includes('co dela dobre') },
+    { nazev: 'CO DĚLÁ DOBŘE přítomna', ok: tl.includes('co dělá dobře') || tl.includes('co dela dobre') || tl.includes('čo robí dobre') || tl.includes('co robí dobre') },
     { nazev: 'QUICK WINS přítomny', ok: tl.includes('quick win') },
     { nazev: 'CLARITY CHECKLIST přítomna', ok: t.includes('CLARITY CHECKLIST') },
     { nazev: 'Žádný ROADMAP/IMPLEMENTACE', ok: !t.includes('ROADMAP') && !t.includes('IMPLEMENTACE') },
@@ -71,7 +71,7 @@ async function testKris(shopUrl) {
     { nazev: 'Vážené skóre (výpočet v závorce)', ok: /\d+[x×]\d+/.test(t) },
     { nazev: 'CO DĚLÁ DOBŘE = přesně 3 body', ok: (t.match(/\*\*\d+\./g) || []).length >= 3 },
     { nazev: 'Quick Wins: Odhadovaný dopad (5×)', ok: (tl.match(/odhadovan/g) || []).length >= 5 },
-    { nazev: 'Quick Wins: Jak ověřit v Clarity (5×)', ok: (tl.match(/jak ov[eě]řit|jak overit/g) || []).length >= 5 },
+    { nazev: 'Quick Wins: Jak ověřit v Clarity (5×)', ok: (tl.match(/jak ov[eě]řit|jak overit|ako overi/g) || []).length >= 5 },
   ];
 
   console.log('\n📊 HODNOCENÍ KRITÉRIÍ:\n');

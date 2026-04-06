@@ -301,7 +301,10 @@ ZAKAZANO: Celkove skore a vypocet opakovat — uved ho POUZE JEDNOU, bezprostred
 Pozor: Skore musi byt relativni vuci kategorii a velikosti e-shopu.
 Niche specializovany e-shop hodnoť vyse za autenticky obsah a odbornost.
 
-PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze". Uved: "N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze." VSECHNY OSTATNI oblasti MUSI vzdy dostat konkretni skore 1-10 s hypotezou ve formatu: "Pravdepodobne [problem] — pokud ano, dopad je [X]%. Jak overit v Clarity: [konkretni krok]." Nikdy nepouzivej N/A pro jine oblasti.
+PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze". Format: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze."
+ZAKAZANO — nikdy nepis: "Mobilni verze: 5/10" nebo jake koliv cislo pro mobilni verzi.
+SPRAVNE: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze."
+VSECHNY OSTATNI oblasti (Duveryhodnost, Produktove stranky, Navigace, Objednavkovy proces, Homepage, SEO, Zakaznicka pece) MUSI vzdy dostat konkretni skore 1-10. Nikdy nepouzivej N/A pro jine oblasti nez Mobilni verze.
 `
 
     const strictRules = `
