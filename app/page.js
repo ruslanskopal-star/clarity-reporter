@@ -335,8 +335,13 @@ export default function Home() {
   var [shopSegment, setShopSegment] = useState('')
   var [shopObrat, setShopObrat] = useState('')
   var [shopProblem, setShopProblem] = useState('')
+  var [preflightDone, setPreflightDone] = useState(false)
+  var [preflightLoading, setPreflightLoading] = useState(false)
+  var [detectedCategory, setDetectedCategory] = useState('')
   var timerRef = useRef(null)
   var phaseRef = useRef(null)
+  var preflightRef = useRef(null)
+  var lastPreflightUrl = useRef('')
 
   useEffect(function() {
     try {
@@ -362,6 +367,42 @@ export default function Home() {
     return function() { clearInterval(timerRef.current); clearTimeout(phaseRef.current) }
   }, [loading])
 
+  // Preflight: po zadani URL s debounce 800ms
+  useEffect(function() {
+    clearTimeout(preflightRef.current)
+    var url = clientUrl.trim()
+    if (!url || url.length < 4 || loading) return
+    // Nepoustet znovu pro stejnou URL
+    var normalized = url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
+    if (normalized === lastPreflightUrl.current) return
+
+    preflightRef.current = setTimeout(function() {
+      var fetchUrl = url.startsWith('http') ? url : 'https://' + url
+      setPreflightLoading(true)
+      setPreflightDone(false)
+      setDetectedCategory('')
+      fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight' }),
+      })
+        .then(function(res) { return res.json() })
+        .then(function(data) {
+          lastPreflightUrl.current = normalized
+          setPreflightDone(true)
+          setPreflightLoading(false)
+          if (data.detectedCategory) setDetectedCategory(data.detectedCategory)
+          // Predvyplnit segment pokud detekovan a uzivatel jeste nevybral
+          if (data.questions) {
+            var segQ = data.questions.find(function(q) { return q.id === 'segment' })
+            if (segQ && segQ.detected && !shopSegment) setShopSegment(segQ.detected)
+          }
+        })
+        .catch(function() { setPreflightLoading(false) })
+    }, 800)
+    return function() { clearTimeout(preflightRef.current) }
+  }, [clientUrl])
+
   function saveToHistory(url, text, dur, mode) {
     var id = Date.now()
     var item = { id, url, analysis: text, date: new Date().toLocaleDateString('cs-CZ'), seconds: dur, mode }
@@ -385,6 +426,9 @@ export default function Home() {
 
   function handleNovaAnalyza() {
     setAnalysis(''); setDisplayUrl(''); setTotalSeconds(null); setCurrentAnalysisId(null)
+    setPreflightDone(false); setPreflightLoading(false); setDetectedCategory('')
+    setShopSegment(''); setShopObrat(''); setShopProblem('')
+    lastPreflightUrl.current = ''
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -540,24 +584,41 @@ export default function Home() {
               </div>
             </div>
 
-            <div style={{marginTop:'16px',paddingTop:'16px',borderTop:'1px solid #222'}}>
-              <div style={{color:'#555',fontSize:'11px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'10px',fontFamily:'Arial,sans-serif'}}>Kontext klienta (volitelne)</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px'}}>
-                {[
-                  { val: shopSegment, set: setShopSegment, placeholder: 'Segment', opts: [['hracky','Hracky'],['moda','Moda a obleceni'],['kosmetika','Kosmetika'],['elektronika','Elektronika'],['nabytek','Nabytek a bydleni'],['sport','Sport a outdoor'],['potraviny','Potraviny'],['jine','Jine']] },
-                  { val: shopObrat, set: setShopObrat, placeholder: 'Rocni obrat', opts: [['do1m','Do 1M Kc'],['1-10m','1-10M Kc'],['10-50m','10-50M Kc'],['50m+','50M+ Kc']] },
-                  { val: shopProblem, set: setShopProblem, placeholder: 'Hlavni problem', opts: [['nizka-konverze','Nizka konverze'],['opusteny-kosik','Opusteny kosik'],['nizky-aov','Nizky prumer objednavky'],['bounce','Vysoky bounce rate'],['mobilni','Problemy na mobilu'],['jine','Jine']] },
-                ].map(function(sel, si) {
-                  return (
-                    <select key={si} value={sel.val} onChange={function(e) { sel.set(e.target.value) }}
-                      style={{padding:'9px 10px',fontSize:'12px',background:'#111',border:'1px solid ' + (sel.val ? '#FF6B00' : '#333'),borderRadius:'6px',color:sel.val ? '#FF6B00' : '#555',fontFamily:'Arial,sans-serif',outline:'none',cursor:'pointer'}}>
-                      <option value="">{sel.placeholder}</option>
-                      {sel.opts.map(function(o) { return <option key={o[0]} value={o[0]}>{o[1]}</option> })}
-                    </select>
-                  )
-                })}
+            {(preflightLoading || preflightDone) && (
+              <div style={{marginTop:'16px',paddingTop:'16px',borderTop:'1px solid #222'}}>
+                {preflightLoading && (
+                  <div style={{color:'#FF6B00',fontSize:'12px',fontFamily:'Arial,sans-serif',fontWeight:'600',display:'flex',alignItems:'center',gap:'8px'}}>
+                    <svg width="14" height="14" style={{animation:'spin-arc 1s linear infinite'}}><circle cx="7" cy="7" r="5" fill="none" stroke="#FF6B00" strokeWidth="2" strokeDasharray="12 20" strokeLinecap="round"/></svg>
+                    Analyzuji web...
+                  </div>
+                )}
+                {preflightDone && (
+                  <>
+                    {detectedCategory && (
+                      <div style={{color:'#4CAF50',fontSize:'12px',fontFamily:'Arial,sans-serif',fontWeight:'600',marginBottom:'10px'}}>
+                        Detekovana kategorie: {detectedCategory}
+                      </div>
+                    )}
+                    <div style={{color:'#555',fontSize:'11px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'10px',fontFamily:'Arial,sans-serif'}}>Upresnete kontext pro presnejsi analyzu</div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px'}}>
+                      {[
+                        { val: shopSegment, set: setShopSegment, placeholder: 'Segment', opts: [['hracky','Hracky'],['moda','Moda a obleceni'],['kosmetika','Kosmetika'],['elektronika','Elektronika'],['nabytek','Nabytek a bydleni'],['sport','Sport a outdoor'],['potraviny','Potraviny'],['jine','Jine']] },
+                        { val: shopObrat, set: setShopObrat, placeholder: 'Rocni obrat', opts: [['do1m','Do 1M Kc'],['1-10m','1-10M Kc'],['10-50m','10-50M Kc'],['50m+','50M+ Kc']] },
+                        { val: shopProblem, set: setShopProblem, placeholder: 'Hlavni problem', opts: [['nizka-konverze','Nizka konverze'],['opusteny-kosik','Opusteny kosik'],['nizky-aov','Nizky prumer objednavky'],['bounce','Vysoky bounce rate'],['mobilni','Problemy na mobilu'],['jine','Jine']] },
+                      ].map(function(sel, si) {
+                        return (
+                          <select key={si} value={sel.val} onChange={function(e) { sel.set(e.target.value) }}
+                            style={{padding:'9px 10px',fontSize:'12px',background:'#111',border:'1px solid ' + (sel.val ? '#FF6B00' : '#333'),borderRadius:'6px',color:sel.val ? '#FF6B00' : '#555',fontFamily:'Arial,sans-serif',outline:'none',cursor:'pointer'}}>
+                            <option value="">{sel.placeholder}</option>
+                            {sel.opts.map(function(o) { return <option key={o[0]} value={o[0]}>{o[1]}</option> })}
+                          </select>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
+            )}
 
             {error && <div style={{marginTop:'16px',padding:'14px',background:'#2a0a0a',border:'2px solid #aa0000',borderRadius:'8px',color:'#ff4444',fontSize:'14px',fontFamily:'Arial,sans-serif'}}>{error}</div>}
             {loading && <LoadingAnimation seconds={seconds} phase={LOADING_PHASES[phaseIndex]} />}
