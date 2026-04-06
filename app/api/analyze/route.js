@@ -314,6 +314,11 @@ function formatClarityContext(clarityData) {
     if (deadSection) lines.push(deadSection)
   }
 
+  const sessions = clarityData?.overall?.find?.(m => m.metricName === 'Traffic')?.information?.[0]?.totalSessionCount ?? 0
+  if (sessions > 0 && sessions < 500) {
+    lines.push(`⚠️ UPOZORNENI: Pouze ${sessions} sessions za 3 dny — malý vzorek dat. Cituj čísla jako orientační, ne jako statisticky spolehlivá. Doporučení postav primárně na CRO principech a odborném odhadu.`)
+  }
+
   lines.push('DULEZITE: Tato cisla jsou REALNA behavioralni data POUZE tohoto webu. Cituj je primo v analyze s konkretnimi hodnotami. Pokud mas mobilni data, Mobilni verze dostane skutecne skore, ne N/A.')
   return lines.join('\n') + '\n'
 }
