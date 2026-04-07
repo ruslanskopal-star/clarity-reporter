@@ -102,12 +102,15 @@ function LoadingAnimation({ seconds, phase }) {
 }
 
 function HistoryItem({ item, onOpen, onDelete }) {
+  var historyScore = item.score || (function() { var m = item.analysis && item.analysis.match(/(\d{2})\/100/); return m ? parseInt(m[1], 10) : null })()
   return (
     <div style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 14px',background:'#111',border:'1px solid #2a2a2a',borderRadius:'8px',marginBottom:'8px'}}>
       <div style={{flex:1,minWidth:0}}>
         <div style={{color:'#FF6B00',fontWeight:'700',fontSize:'13px',fontFamily:'Arial,sans-serif',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cleanUrl(item.url)}</div>
-        <div style={{color:'#444',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'2px'}}>
+        <div style={{color:'#444',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'2px',display:'flex',alignItems:'center',gap:'4px',flexWrap:'wrap'}}>
           {item.date} &bull; {item.seconds}s &bull; {item.mode === 'top10' ? 'TOP 10' : 'Plna analyza'}
+          {item.withClarity ? <span style={{color:'#FF6B00',fontWeight:'700'}}>&bull; ✦ Clarity</span> : <span style={{color:'#555'}}>&bull; bez Clarity</span>}
+          {historyScore && <span style={{color:scoreColor(historyScore),fontWeight:'700'}}>&bull; {historyScore}/100</span>}
         </div>
       </div>
       <button onClick={() => onOpen(item)} style={{padding:'6px 14px',fontSize:'12px',fontWeight:'700',background:'#1a1a1a',border:'1px solid #FF6B00',color:'#FF6B00',borderRadius:'6px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>Otevrit</button>
@@ -403,9 +406,11 @@ export default function Home() {
     return function() { clearTimeout(preflightRef.current) }
   }, [clientUrl])
 
-  function saveToHistory(url, text, dur, mode) {
+  function saveToHistory(url, text, dur, mode, hadClarity) {
     var id = Date.now()
-    var item = { id, url, analysis: text, date: new Date().toLocaleDateString('cs-CZ'), seconds: dur, mode }
+    var scoreMatch = text.match(/(\d{2})\/100/)
+    var score = scoreMatch ? parseInt(scoreMatch[1], 10) : null
+    var item = { id, url, analysis: text, date: new Date().toLocaleDateString('cs-CZ'), seconds: dur, mode, withClarity: hadClarity, score }
     var updated = [item].concat(history).slice(0, MAX_HISTORY)
     setHistory(updated)
     try { localStorage.setItem(HISTORY_KEY, JSON.stringify(updated)) } catch(e) {}
@@ -508,7 +513,7 @@ export default function Home() {
       setTotalSeconds(elapsed)
       setCurrentMode(reportMode)
       setClientUrl('')
-      var newId = saveToHistory(fetchUrl, clean, elapsed, reportMode)
+      var newId = saveToHistory(fetchUrl, clean, elapsed, reportMode, withClarity)
       setCurrentAnalysisId(newId)
     } catch(e) {
       setError('Chyba spojeni: ' + e.message)
