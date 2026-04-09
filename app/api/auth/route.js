@@ -1,4 +1,4 @@
-import { TOTP } from 'otpauth'
+import { TOTP, Secret } from 'otpauth'
 
 export const runtime = 'nodejs'
 
@@ -14,7 +14,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'TOTP neni nakonfigurovany' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
-    const totp = new TOTP({ secret, algorithm: 'SHA1', digits: 6, period: 30 })
+    const totp = new TOTP({ secret: Secret.fromBase32(secret), algorithm: 'SHA1', digits: 6, period: 30 })
     const valid = totp.validate({ token: code, window: 1 }) !== null
 
     if (!valid) {
