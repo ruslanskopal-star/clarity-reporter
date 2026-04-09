@@ -299,14 +299,15 @@ export default function Home() {
       saveToHistory(url, clean, elapsed)
 
       // Ulozit do Vercel Blob
-      fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url, analysis: clean, withClarity: withClarity, seconds: elapsed }),
-      }).then(function(r) {
-        if (!r.ok) console.error('Blob save failed:', r.status)
+      try {
+        var saveRes = await fetch('/api/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, analysis: clean, withClarity: withClarity, seconds: elapsed }),
+        })
+        if (!saveRes.ok) console.error('Blob save failed:', saveRes.status)
         else console.log('Report ulozen do Blob')
-      }).catch(function(e) { console.error('Blob save error:', e.message) })
+      } catch(saveErr) { console.error('Blob save error:', saveErr.message) }
     } catch(e) {
       setError('Chyba spojeni: ' + e.message)
     }
