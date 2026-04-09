@@ -503,8 +503,23 @@ export async function POST(req) {
 
     console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
 
-    if (!clientUrl) {
+    if (!clientUrl || typeof clientUrl !== 'string' || clientUrl.length > 200) {
       return new Response(JSON.stringify({ error: 'Chybi URL klienta' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // SSRF prevence: povolene jen http/https schema, zadne interni adresy
+    const normalizedUrl = clientUrl.startsWith('http') ? clientUrl : `https://${clientUrl}`
+    try {
+      const parsed = new URL(normalizedUrl)
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return new Response(JSON.stringify({ error: 'Neplatne URL — povolene jen http/https' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+      }
+      const host = parsed.hostname.toLowerCase()
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.startsWith('10.') || host.startsWith('192.168.') || host.startsWith('172.') || host.endsWith('.local') || host.endsWith('.internal')) {
+        return new Response(JSON.stringify({ error: 'Interni adresy nejsou povolene' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+      }
+    } catch {
+      return new Response(JSON.stringify({ error: 'Neplatny format URL' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY
@@ -772,7 +787,8 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
 
     if (!anthropicResponse.ok) {
       const err = await anthropicResponse.text()
-      return new Response(JSON.stringify({ error: 'Chyba API: ' + err }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      console.error('[ANALYZE] Anthropic API error:', err)
+      return new Response(JSON.stringify({ error: 'Chyba AI sluzby' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     const { readable, writable } = new TransformStream()
@@ -822,7 +838,8 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
           }
         }
       } catch (err) {
-        await writer.write(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`))
+        console.error('[ANALYZE] Stream error:', err.message)
+        await writer.write(encoder.encode(`data: ${JSON.stringify({ error: 'Chyba pri generovani analyzy' })}\n\n`))
       } finally {
         await writer.close()
       }

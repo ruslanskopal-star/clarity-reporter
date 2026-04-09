@@ -382,17 +382,7 @@ export default function Home() {
       setTotalSeconds(elapsed)
       setClientUrl('')
       saveToHistory(url, clean, elapsed)
-
-      // Ulozit do Vercel Blob
-      try {
-        var saveRes = await fetch('/api/reports', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url, analysis: clean, withClarity: withClarity, seconds: elapsed, authToken: authToken }),
-        })
-        if (!saveRes.ok) console.error('Blob save failed:', saveRes.status)
-        else console.log('Report ulozen do Blob')
-      } catch(saveErr) { console.error('Blob save error:', saveErr.message) }
+      // Report se uklada server-side v route.js po dokonceni streamu
     } catch(e) {
       setError('Chyba spojeni: ' + e.message)
     }

@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { Redis } from '@upstash/redis'
 import { Ratelimit } from '@upstash/ratelimit'
 
@@ -24,7 +24,8 @@ export function verifySessionToken(token) {
   if (isNaN(age) || age > TOKEN_MAX_AGE || age < 0) return false
 
   const expected = createHmac('sha256', secret).update(timestamp).digest('hex')
-  return signature === expected
+  if (signature.length !== expected.length) return false
+  return timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))
 }
 
 // Persistentni rate limiter (Upstash Redis)

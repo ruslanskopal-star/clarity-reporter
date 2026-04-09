@@ -16,7 +16,7 @@ export async function POST(req) {
     }
 
     if (!url || !analysis) {
-      return new Response(JSON.stringify({ error: 'Chybí url nebo analysis' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Chybí url nebo analysis' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
 
     const hostname = url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
