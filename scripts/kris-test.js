@@ -2,11 +2,50 @@
 // @claude timeout=300
 // KRIS iterační tester — volá live API přímo, bez browseru
 // Použití: node scripts/kris-test.js davona.cz
+// Auth:    KRIS_AUTH_TOKEN env var nebo --token=xxx argument
 
 const url = process.argv[2];
-if (!url) { console.error('Použití: node scripts/kris-test.js <url-eshopu>'); process.exit(1); }
+if (!url || url.startsWith('--')) { console.error('Použití: node scripts/kris-test.js <url-eshopu> [--token=xxx]'); process.exit(1); }
 
 const API = 'https://cro-report.vercel.app/api/analyze';
+const AUTH_API = 'https://cro-report.vercel.app/api/auth';
+
+// Auth token z env nebo argumentu
+function getAuthToken() {
+  const tokenArg = process.argv.find(a => a.startsWith('--token='));
+  if (tokenArg) return tokenArg.split('=')[1];
+  if (process.env.KRIS_AUTH_TOKEN) return process.env.KRIS_AUTH_TOKEN;
+  return null;
+}
+
+async function authenticateInteractive() {
+  const readline = await import('readline');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question('Zadej 6-místný TOTP kód: ', async (code) => {
+      rl.close();
+      try {
+        const res = await fetch(AUTH_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code.trim() }),
+        });
+        const data = await res.json();
+        if (data.ok && data.token) {
+          console.log(`✅ Auth OK — token platný 24h`);
+          console.log(`💡 Pro příště: export KRIS_AUTH_TOKEN="${data.token}"\n`);
+          resolve(data.token);
+        } else {
+          console.error(`❌ Auth failed: ${data.error || 'Neplatný kód'}`);
+          process.exit(1);
+        }
+      } catch (e) {
+        console.error('❌ Auth error:', e.message);
+        process.exit(1);
+      }
+    });
+  });
+}
 
 async function checkClarity(shopUrl) {
   try {
@@ -23,6 +62,12 @@ async function checkClarity(shopUrl) {
 }
 
 async function testKris(shopUrl) {
+  let authToken = getAuthToken();
+  if (!authToken) {
+    console.log('⚠️  Žádný auth token — potřebuji TOTP kód\n');
+    authToken = await authenticateInteractive();
+  }
+
   console.log(`\n🔍 Testuji: ${shopUrl}\n`);
 
   const hasClarity = await checkClarity(shopUrl);
@@ -38,12 +83,17 @@ async function testKris(shopUrl) {
   const res = await fetch(API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clientUrl: shopUrl, reportMode: 'full', withClarity: true }),
+    body: JSON.stringify({ clientUrl: shopUrl, reportMode: 'full', withClarity: true, authToken }),
     signal: controller.signal
   });
   clearTimeout(fetchTimeout);
 
-  if (!res.ok) { console.error('API error:', res.status, await res.text()); process.exit(1); }
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error(`API error ${res.status}:`, errText);
+    if (res.status === 401) console.error('💡 Token vypršel — spusť znovu pro nový TOTP kód');
+    process.exit(1);
+  }
 
   // Streaming response
   const reader = res.body.getReader();

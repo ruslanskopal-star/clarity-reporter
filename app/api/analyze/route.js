@@ -444,46 +444,6 @@ function formatMultiPageContext(crawlData) {
   return ctx
 }
 
-async function fetchPageMeta(url) {
-  try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000)
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CROBot/1.0)',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'cs,en;q=0.9',
-      },
-    })
-    clearTimeout(timeout)
-    if (!response.ok) return null
-    const html = await response.text()
-
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
-    const title = titleMatch ? titleMatch[1].trim().replace(/\s+/g, ' ') : null
-    const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
-    const description = descMatch ? descMatch[1].trim().replace(/\s+/g, ' ') : null
-    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-    const h1 = h1Match ? h1Match[1].trim().replace(/\s+/g, ' ') : null
-    const ogTitleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)
-    const ogTitle = ogTitleMatch ? ogTitleMatch[1].trim() : null
-    const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)
-    const ogDesc = ogDescMatch ? ogDescMatch[1].trim() : null
-    const h2Count = (html.match(/<h2[^>]*>/gi) || []).length
-    const hasSchema = /application\/ld\+json/i.test(html)
-    const canonicalMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)
-    const canonical = canonicalMatch ? canonicalMatch[1].trim() : null
-
-    return { title: title || ogTitle, description: description || ogDesc, h1, h2Count, hasSchema, canonical }
-  } catch {
-    return null
-  }
-}
-
 export async function POST(req) {
   try {
     const { clientUrl, withClarity, reportMode, shopContext, action, authToken } = await req.json()
@@ -493,12 +453,6 @@ export async function POST(req) {
     if (!verifySessionToken(authToken)) {
       console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip} url=${clientUrl} action=${action || 'analyze'}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup — zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
-    }
-
-    // Rate limit: max 10 analyz za hodinu per IP
-    if (!await checkAnalyzeRateLimit(ip)) {
-      console.warn(`[ANALYZE] RATE LIMITED ip=${ip}`)
-      return new Response(JSON.stringify({ error: 'Prilis mnoho analyz, zkuste za hodinu' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
 
     console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
@@ -571,6 +525,12 @@ export async function POST(req) {
           { id: 'problem', label: 'Co vas nejvic trapi?', options: ['nizka-konverze','opusteny-kosik','nizky-aov','bounce','mobilni','jine'] },
         ],
       }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // Rate limit: max 10 analyzí za hodinu per IP (jen pro plnou analýzu, ne preflight)
+    if (!await checkAnalyzeRateLimit(ip)) {
+      console.warn(`[ANALYZE] RATE LIMITED ip=${ip}`)
+      return new Response(JSON.stringify({ error: 'Prilis mnoho analyz, zkuste za hodinu' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
 
     const [crawlData, clarityData] = await Promise.all([
