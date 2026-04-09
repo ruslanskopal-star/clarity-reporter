@@ -10,6 +10,7 @@
 - **@DESIGN.md** — vizualni system, barvy, typografie, komponenty, print styly
 - **@SECURITY.md** — autentizace, validace, error handling, secrets, dependencies
 - **@PLAN.md** — verzovany roadmap (v28 → v29 → v30 → v31)
+- **@AUDIT.md** — tydenni hloubkovy audit (bezpecnost, endpointy, errory, kod) — provadej 1× tydne
 
 ---
 
