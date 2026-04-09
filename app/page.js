@@ -254,7 +254,7 @@ export default function Home() {
       fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight' }),
+        body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight', authToken: authToken }),
       })
         .then(function(res) { return res.json() })
         .then(function(data) {

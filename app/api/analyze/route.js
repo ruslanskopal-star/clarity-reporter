@@ -6,7 +6,7 @@
 // 4. Tri vrstvy + matice dopad/narocnost (z v24)
 
 import { put } from '@vercel/blob'
-import { verifySessionToken } from '../../lib/auth.js'
+import { verifySessionToken, checkAnalyzeRateLimit } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -488,15 +488,20 @@ export async function POST(req) {
   try {
     const { clientUrl, withClarity, reportMode, shopContext, action, authToken } = await req.json()
 
-    // Overeni session tokenu (krome preflight)
+    // Overeni session tokenu
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (action !== 'preflight') {
-      if (!verifySessionToken(authToken)) {
-        console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip} url=${clientUrl}`)
-        return new Response(JSON.stringify({ error: 'Neautorizovany pristup — zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
-      }
-      console.log(`[ANALYZE] START ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
+    if (!verifySessionToken(authToken)) {
+      console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip} url=${clientUrl} action=${action || 'analyze'}`)
+      return new Response(JSON.stringify({ error: 'Neautorizovany pristup — zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
+
+    // Rate limit: max 10 analyz za hodinu per IP
+    if (!await checkAnalyzeRateLimit(ip)) {
+      console.warn(`[ANALYZE] RATE LIMITED ip=${ip}`)
+      return new Response(JSON.stringify({ error: 'Prilis mnoho analyz, zkuste za hodinu' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
 
     if (!clientUrl) {
       return new Response(JSON.stringify({ error: 'Chybi URL klienta' }), { status: 400, headers: { 'Content-Type': 'application/json' } })

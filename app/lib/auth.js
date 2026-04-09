@@ -1,4 +1,6 @@
 import { createHmac } from 'crypto'
+import { Redis } from '@upstash/redis'
+import { Ratelimit } from '@upstash/ratelimit'
 
 const TOKEN_MAX_AGE = 24 * 60 * 60 * 1000 // 24h
 
@@ -25,29 +27,32 @@ export function verifySessionToken(token) {
   return signature === expected
 }
 
-// Rate limiter — in-memory, per IP
-const attempts = new Map()
-const MAX_ATTEMPTS = 5
-const WINDOW_MS = 15 * 60 * 1000 // 15 min
+// Persistentni rate limiter (Upstash Redis)
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+})
 
-export function checkRateLimit(ip) {
-  const now = Date.now()
-  const record = attempts.get(ip)
+// Max 5 pokusu za 15 minut per IP
+const authLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '15 m'),
+  prefix: 'ratelimit:auth',
+})
 
-  if (!record || now - record.start > WINDOW_MS) {
-    attempts.set(ip, { count: 1, start: now })
-    return true
-  }
+// Max 10 analyzí za hodinu per IP
+const analyzeLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1 h'),
+  prefix: 'ratelimit:analyze',
+})
 
-  if (record.count >= MAX_ATTEMPTS) return false
-  record.count++
-  return true
+export async function checkAuthRateLimit(ip) {
+  const { success } = await authLimiter.limit(ip)
+  return success
 }
 
-// Cleanup stale entries every 10 min
-setInterval(() => {
-  const now = Date.now()
-  for (const [ip, record] of attempts) {
-    if (now - record.start > WINDOW_MS) attempts.delete(ip)
-  }
-}, 10 * 60 * 1000)
+export async function checkAnalyzeRateLimit(ip) {
+  const { success } = await analyzeLimiter.limit(ip)
+  return success
+}

@@ -1,13 +1,14 @@
 import { TOTP, Secret } from 'otpauth'
-import { createSessionToken, checkRateLimit } from '../../lib/auth.js'
+import { createSessionToken, checkAuthRateLimit } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
 
 export async function POST(req) {
   try {
-    // Rate limit per IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!checkRateLimit(ip)) {
+
+    // Persistentni rate limit (Upstash Redis)
+    if (!await checkAuthRateLimit(ip)) {
       console.warn(`[AUTH] RATE LIMITED ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Prilis mnoho pokusu, zkuste za 15 minut' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
