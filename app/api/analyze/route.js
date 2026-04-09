@@ -485,7 +485,25 @@ async function fetchPageMeta(url) {
 
 export async function POST(req) {
   try {
-    const { clientUrl, withClarity, reportMode, shopContext, action } = await req.json()
+    const { clientUrl, withClarity, reportMode, shopContext, action, authToken } = await req.json()
+
+    // Overeni session tokenu (krome preflight)
+    if (action !== 'preflight') {
+      const secret = process.env.TOTP_SECRET
+      if (!authToken || !secret) {
+        return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+      }
+      try {
+        const decoded = Buffer.from(authToken, 'base64').toString()
+        const [tokenSecret, timestamp] = decoded.split(':')
+        const age = Date.now() - parseInt(timestamp)
+        if (tokenSecret !== secret || age > 24 * 60 * 60 * 1000) {
+          return new Response(JSON.stringify({ error: 'Session vyprsela, zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+        }
+      } catch {
+        return new Response(JSON.stringify({ error: 'Neplatny token' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
 
     if (!clientUrl) {
       return new Response(JSON.stringify({ error: 'Chybi URL klienta' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -734,7 +752,7 @@ ${structureInstruction}
 
 Pouzij specificke znalosti pro kategorii tohoto e-shopu z databaze. Identifikuj kategorii z URL a nazvu e-shopu.`
 
-    const userMessage = `Priprav KRIS CRO analyzu pro e-shop: ${clientUrl}
+    const userMessage = `Priprav CRO analyzu pro e-shop: ${clientUrl}
 
 Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY nepouzivej slovo "pravdepodobne".`
 

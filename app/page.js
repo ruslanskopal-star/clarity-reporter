@@ -156,6 +156,8 @@ function renderLine(line, i) {
   return <div key={i} style={{color:'#ccc',marginTop:'6px',fontSize:'15px',fontFamily:'Arial,sans-serif',lineHeight:'1.7'}}>{parseInline(line)}</div>
 }
 
+const AUTH_KEY = 'kris_auth_token'
+
 export default function Home() {
   var [clientUrl, setClientUrl] = useState('')
   var [loading, setLoading] = useState(false)
@@ -168,6 +170,10 @@ export default function Home() {
   var [history, setHistory] = useState([])
   var [totalSeconds, setTotalSeconds] = useState(null)
   var [copied, setCopied] = useState(false)
+  var [authToken, setAuthToken] = useState(null)
+  var [authCode, setAuthCode] = useState('')
+  var [authError, setAuthError] = useState('')
+  var [authLoading, setAuthLoading] = useState(false)
   var timerRef = useRef(null)
   var phaseRef = useRef(null)
 
@@ -175,8 +181,34 @@ export default function Home() {
     try {
       var saved = localStorage.getItem(HISTORY_KEY)
       if (saved) setHistory(JSON.parse(saved))
+      var token = localStorage.getItem(AUTH_KEY)
+      if (token) setAuthToken(token)
     } catch(e) {}
   }, [])
+
+  async function handleAuth() {
+    if (!authCode.trim() || authCode.length !== 6) return
+    setAuthLoading(true)
+    setAuthError('')
+    try {
+      var res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: authCode.trim() }),
+      })
+      var data = await res.json()
+      if (data.ok) {
+        setAuthToken(data.token)
+        localStorage.setItem(AUTH_KEY, data.token)
+        setAuthCode('')
+      } else {
+        setAuthError(data.error || 'Neplatny kod')
+      }
+    } catch(e) {
+      setAuthError('Chyba spojeni')
+    }
+    setAuthLoading(false)
+  }
 
   useEffect(function() {
     if (loading) {
@@ -256,11 +288,15 @@ export default function Home() {
       var res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: url, withClarity: withClarity }),
+        body: JSON.stringify({ clientUrl: url, withClarity: withClarity, authToken: authToken }),
       })
 
       if (!res.ok || !res.body) {
         var errData = await res.json().catch(function() { return { error: 'Chyba serveru' } })
+        if (res.status === 401) {
+          setAuthToken(null)
+          localStorage.removeItem(AUTH_KEY)
+        }
         setError('Chyba: ' + (errData.error || res.status))
         setLoading(false)
         return
@@ -336,7 +372,34 @@ export default function Home() {
             <h2 style={{fontSize:'16px',fontWeight:'700',color:'#FF6B00',margin:'0',textTransform:'uppercase',letterSpacing:'3px'}}>Trzbě a marzi Zdar!</h2>
           </div>
 
-          <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px'}}>
+          {!authToken && (
+            <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px',textAlign:'center'}}>
+              <div style={{fontSize:'15px',fontWeight:'700',color:'white',marginBottom:'8px'}}>Pristup chraneny</div>
+              <p style={{color:'#888',fontSize:'13px',fontFamily:'Arial,sans-serif',marginTop:'0',marginBottom:'20px'}}>Zadej 6-mistny kod z Authenticator aplikace</p>
+              <div style={{display:'flex',gap:'12px',justifyContent:'center',marginBottom:'12px'}}>
+                <input
+                  value={authCode}
+                  onChange={function(e) { setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6)) }}
+                  placeholder="000000"
+                  onKeyDown={function(e) { if (e.key === 'Enter') handleAuth() }}
+                  style={{width:'160px',padding:'14px 18px',fontSize:'22px',fontWeight:'900',textAlign:'center',letterSpacing:'8px',background:'#111',border:'2px solid #333',borderRadius:'8px',color:'white',fontFamily:'monospace',outline:'none'}}
+                  onFocus={function(e) { e.target.style.borderColor='#FF6B00' }}
+                  onBlur={function(e) { e.target.style.borderColor='#333' }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleAuth}
+                  disabled={authLoading || authCode.length !== 6}
+                  style={{padding:'14px 28px',fontSize:'15px',fontWeight:'900',textTransform:'uppercase',background:authLoading||authCode.length!==6?'#333':'#FF6B00',color:authLoading||authCode.length!==6?'#666':'white',border:'none',borderRadius:'8px',cursor:authLoading||authCode.length!==6?'not-allowed':'pointer'}}
+                >
+                  {authLoading ? '...' : 'Overit'}
+                </button>
+              </div>
+              {authError && <div style={{color:'#ff4444',fontSize:'13px',fontFamily:'Arial,sans-serif'}}>{authError}</div>}
+            </div>
+          )}
+
+          {authToken && <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px'}}>
             <p style={{color:'#888',fontSize:'14px',marginTop:'0',marginBottom:'20px',textAlign:'center',fontFamily:'Arial,sans-serif'}}>
               Zadej web klienta a AI agent vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
             </p>
@@ -375,7 +438,7 @@ export default function Home() {
 
             {error && <div style={{marginTop:'16px',padding:'14px',background:'#2a0a0a',border:'2px solid #aa0000',borderRadius:'8px',color:'#ff4444',fontSize:'14px',fontFamily:'Arial,sans-serif'}}>{error}</div>}
             {loading && <LoadingAnimation seconds={seconds} phase={LOADING_PHASES[phaseIndex]} />}
-          </div>
+          </div>}
 
           {history.length > 0 && !loading && !analysis && (
             <div className="no-print" style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px',marginBottom:'32px'}}>
