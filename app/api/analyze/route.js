@@ -489,10 +489,13 @@ export async function POST(req) {
     const { clientUrl, withClarity, reportMode, shopContext, action, authToken } = await req.json()
 
     // Overeni session tokenu (krome preflight)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
     if (action !== 'preflight') {
       if (!verifySessionToken(authToken)) {
+        console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip} url=${clientUrl}`)
         return new Response(JSON.stringify({ error: 'Neautorizovany pristup — zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
       }
+      console.log(`[ANALYZE] START ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
     }
 
     if (!clientUrl) {

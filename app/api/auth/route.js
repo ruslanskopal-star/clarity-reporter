@@ -8,6 +8,7 @@ export async function POST(req) {
     // Rate limit per IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
     if (!checkRateLimit(ip)) {
+      console.warn(`[AUTH] RATE LIMITED ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Prilis mnoho pokusu, zkuste za 15 minut' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
 
@@ -25,9 +26,11 @@ export async function POST(req) {
     const valid = totp.validate({ token: code, window: 1 }) !== null
 
     if (!valid) {
+      console.warn(`[AUTH] FAILED ip=${ip}`)
       return new Response(JSON.stringify({ ok: false, error: 'Neplatny kod' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
+    console.log(`[AUTH] OK ip=${ip}`)
     const sessionToken = createSessionToken()
     return new Response(JSON.stringify({ ok: true, token: sessionToken }), { headers: { 'Content-Type': 'application/json' } })
   } catch (e) {

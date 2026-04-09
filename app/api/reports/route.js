@@ -9,7 +9,9 @@ export async function POST(req) {
   try {
     const { url, analysis, mode, score, withClarity, seconds, authToken } = await req.json()
 
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
     if (!verifySessionToken(authToken)) {
+      console.warn(`[REPORTS] UNAUTHORIZED POST ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
@@ -53,12 +55,15 @@ export async function GET(req) {
     // Auth z query stringu nebo headeru
     const { searchParams } = new URL(req.url)
     const authToken = searchParams.get('token') || req.headers.get('authorization')?.replace('Bearer ', '')
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
 
     if (!verifySessionToken(authToken)) {
+      console.warn(`[REPORTS] UNAUTHORIZED GET ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
     const hostname = searchParams.get('hostname')
+    console.log(`[REPORTS] GET ip=${ip} hostname=${hostname || 'all'}`)
     const prefix = hostname ? `reports/${hostname}/` : 'reports/'
 
     const { blobs } = await list({ prefix })
