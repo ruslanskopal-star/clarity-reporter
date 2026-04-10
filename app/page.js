@@ -246,7 +246,8 @@ export default function Home() {
   var [preflightDone, setPreflightDone] = useState(false)
   var [preflightLoading, setPreflightLoading] = useState(false)
   var [detectedCategory, setDetectedCategory] = useState('')
-  var [screenshots, setScreenshots] = useState({})
+  var [screenshots, setScreenshots] = useState({}) // { slotId: { thumb: base64, status: 'uploading'|'ok'|'error' } }
+  var [sessionId, setSessionId] = useState('')
   var timerRef = useRef(null)
   var phaseRef = useRef(null)
   var preflightRef = useRef(null)
@@ -359,22 +360,56 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  async function handleScreenshot(slotId, file) {
-    if (!file) return
-    var base64 = await resizeImage(file)
-    setScreenshots(function(prev) {
-      var next = Object.assign({}, prev)
-      next[slotId] = base64
-      return next
-    })
+  function ensureSessionId() {
+    if (sessionId) return sessionId
+    var id = (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2))).slice(0, 32)
+    setSessionId(id)
+    return id
   }
 
-  function removeScreenshot(slotId) {
+  async function handleScreenshot(slotId, file) {
+    if (!file) return
+    var sid = ensureSessionId()
+    var base64 = await resizeImage(file)
+    // Zobraz nahled okamzite jako 'uploading'
+    setScreenshots(function(prev) {
+      var next = Object.assign({}, prev)
+      next[slotId] = { thumb: base64, status: 'uploading' }
+      return next
+    })
+    try {
+      var res = await fetch('/api/upload-screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authToken: authToken, sessionId: sid, slotId: slotId, base64: base64 }),
+      })
+      var data = await res.json()
+      setScreenshots(function(prev) {
+        var next = Object.assign({}, prev)
+        if (data.ok) next[slotId] = { thumb: base64, status: 'ok' }
+        else next[slotId] = { thumb: base64, status: 'error' }
+        return next
+      })
+    } catch (e) {
+      setScreenshots(function(prev) {
+        var next = Object.assign({}, prev)
+        next[slotId] = { thumb: base64, status: 'error' }
+        return next
+      })
+    }
+  }
+
+  async function removeScreenshot(slotId) {
     setScreenshots(function(prev) {
       var next = Object.assign({}, prev)
       delete next[slotId]
       return next
     })
+    if (sessionId) {
+      try {
+        await fetch('/api/upload-screenshot?sessionId=' + sessionId + '&slotId=' + slotId + '&token=' + encodeURIComponent(authToken), { method: 'DELETE' })
+      } catch (e) {}
+    }
   }
 
   function handleNovaAnalyza() {
@@ -388,6 +423,7 @@ export default function Home() {
     setShopObrat('')
     setShopProblem('')
     setScreenshots({})
+    setSessionId('')
     lastPreflightUrl.current = ''
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -423,7 +459,7 @@ export default function Home() {
       var res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: url, withClarity: withClarity, authToken: authToken, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, screenshots: screenshots }),
+        body: JSON.stringify({ clientUrl: url, withClarity: withClarity, authToken: authToken, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
       })
 
       if (!res.ok || !res.body) {
@@ -602,14 +638,23 @@ export default function Home() {
                 <div style={{color:'#555',fontSize:'11px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'10px',fontFamily:'Arial,sans-serif'}}>Screenshoty stranek (volitelne)</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
                   {SCREENSHOT_SLOTS.map(function(slot) {
-                    var hasImg = !!screenshots[slot.id]
+                    var sc = screenshots[slot.id]
+                    var hasImg = !!sc
+                    var borderColor = '#333'
+                    if (hasImg) {
+                      if (sc.status === 'ok') borderColor = '#FF6B00'
+                      else if (sc.status === 'uploading') borderColor = '#ffcc00'
+                      else if (sc.status === 'error') borderColor = '#ff4444'
+                    }
                     return (
-                      <div key={slot.id} style={{position:'relative',border:'1px solid ' + (hasImg ? '#FF6B00' : '#333'),borderRadius:'6px',overflow:'hidden',background:'#111'}}>
+                      <div key={slot.id} style={{position:'relative',border:'1px solid ' + borderColor,borderRadius:'6px',overflow:'hidden',background:'#111'}}>
                         {hasImg ? (
                           <div style={{position:'relative'}}>
-                            <img src={'data:image/jpeg;base64,' + screenshots[slot.id]} alt={slot.label} style={{width:'100%',maxHeight:'80px',objectFit:'cover',display:'block'}} />
-                            <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                              <span style={{color:'#FF6B00',fontSize:'11px',fontWeight:'700',fontFamily:'Arial,sans-serif'}}>{slot.label}</span>
+                            <img src={'data:image/jpeg;base64,' + sc.thumb} alt={slot.label} style={{width:'100%',maxHeight:'80px',objectFit:'cover',display:'block'}} />
+                            <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'2px'}}>
+                              <span style={{color:borderColor,fontSize:'11px',fontWeight:'700',fontFamily:'Arial,sans-serif'}}>{slot.label}</span>
+                              {sc.status === 'uploading' && <span style={{color:'#ffcc00',fontSize:'9px',fontFamily:'Arial,sans-serif'}}>Nahravam...</span>}
+                              {sc.status === 'error' && <span style={{color:'#ff4444',fontSize:'9px',fontFamily:'Arial,sans-serif'}}>Chyba</span>}
                             </div>
                             <button onClick={function() { removeScreenshot(slot.id) }} style={{position:'absolute',top:'4px',right:'4px',width:'18px',height:'18px',borderRadius:'50%',border:'none',background:'#ff4444',color:'white',fontSize:'11px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,lineHeight:1}}>x</button>
                           </div>
@@ -624,13 +669,13 @@ export default function Home() {
                   })}
                 </div>
                 {Object.keys(screenshots).length > 0 && (() => {
-                  var totalBytes = 0
-                  Object.values(screenshots).forEach(function(b) { totalBytes += b.length * 0.75 })
-                  var mb = (totalBytes / 1024 / 1024).toFixed(1)
-                  var tooBig = totalBytes > 4000000
+                  var vals = Object.values(screenshots)
+                  var ok = vals.filter(function(s) { return s.status === 'ok' }).length
+                  var uploading = vals.filter(function(s) { return s.status === 'uploading' }).length
+                  var err = vals.filter(function(s) { return s.status === 'error' }).length
                   return (
-                    <div style={{color:tooBig?'#ff4444':'#4CAF50',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'8px'}}>
-                      {Object.keys(screenshots).length} screenshotu nahrano ({mb} MB){tooBig ? ' — PRILIS VELKE, odstrante nejake' : ''}
+                    <div style={{color:'#4CAF50',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'8px'}}>
+                      {ok} nahrano{uploading > 0 ? ', ' + uploading + ' se nahrava' : ''}{err > 0 ? ', ' + err + ' chyba' : ''}
                     </div>
                   )
                 })()}

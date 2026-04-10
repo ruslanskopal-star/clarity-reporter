@@ -5,7 +5,7 @@
 // 3. shopContext (segment, obrat, problem) injektovan do promptu
 // 4. Tri vrstvy + matice dopad/narocnost (z v24)
 
-import { put } from '@vercel/blob'
+import { put, list, del } from '@vercel/blob'
 import { verifySessionToken, checkAnalyzeRateLimit } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
@@ -446,7 +446,7 @@ function formatMultiPageContext(crawlData) {
 
 export async function POST(req) {
   try {
-    const { clientUrl, withClarity, reportMode, shopContext, action, authToken, screenshots } = await req.json()
+    const { clientUrl, withClarity, reportMode, shopContext, action, authToken, sessionId } = await req.json()
 
     // Overeni session tokenu
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -742,16 +742,41 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
     }
 
     const userContent = []
+    let sessionBlobs = []
 
-    if (screenshots && typeof screenshots === 'object') {
-      const entries = Object.entries(screenshots)
-      if (entries.length > 0) {
-        userContent.push({ type: 'text', text: `Prikladam ${entries.length} celostrankovy screenshot${entries.length > 1 ? 'u' : ''} webu ${clientUrl}. Analyzuj co na nich SKUTECNE vidis. Netvrdi ze neco chybi, kdyz to na screenshotu je.` })
-        for (const [slotId, base64] of entries) {
-          const label = SLOT_LABELS[slotId] || slotId
-          userContent.push({ type: 'text', text: `Screenshot: ${label}` })
-          userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } })
+    if (sessionId && /^[a-zA-Z0-9]{8,64}$/.test(sessionId)) {
+      try {
+        const { blobs } = await list({ prefix: `screenshots/${sessionId}/` })
+        sessionBlobs = blobs
+        if (blobs.length > 0) {
+          userContent.push({ type: 'text', text: `Prikladam ${blobs.length} celostrankovy screenshot${blobs.length > 1 ? 'u' : ''} webu ${clientUrl}. Analyzuj co na nich SKUTECNE vidis. Netvrdi ze neco chybi, kdyz to na screenshotu je.` })
+
+          // Stahni kazdy blob a zakoduj jako base64 pro Claude
+          // Zachovej poradi dle SLOT_LABELS
+          const slotOrder = Object.keys(SLOT_LABELS)
+          const sortedBlobs = [...blobs].sort((a, b) => {
+            const aSlot = a.pathname.split('/').pop().replace('.jpg', '')
+            const bSlot = b.pathname.split('/').pop().replace('.jpg', '')
+            return slotOrder.indexOf(aSlot) - slotOrder.indexOf(bSlot)
+          })
+
+          for (const blob of sortedBlobs) {
+            const slotId = blob.pathname.split('/').pop().replace('.jpg', '')
+            const label = SLOT_LABELS[slotId] || slotId
+            try {
+              const res = await fetch(blob.downloadUrl || blob.url)
+              if (!res.ok) continue
+              const arrayBuffer = await res.arrayBuffer()
+              const base64 = Buffer.from(arrayBuffer).toString('base64')
+              userContent.push({ type: 'text', text: `Screenshot: ${label}` })
+              userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } })
+            } catch (blobFetchErr) {
+              console.error(`[ANALYZE] Blob fetch error slot=${slotId}:`, blobFetchErr.message)
+            }
+          }
         }
+      } catch (listErr) {
+        console.error('[ANALYZE] Blob list error:', listErr.message)
       }
     }
 
@@ -823,6 +848,16 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
             console.log('Report ulozen do Blob:', hostname)
           } catch (blobErr) {
             console.error('Blob save error:', blobErr.message)
+          }
+        }
+
+        // Smaz screenshoty z Blob (po dokonceni analyzy uz nejsou potreba)
+        if (sessionBlobs.length > 0) {
+          try {
+            await Promise.allSettled(sessionBlobs.map(b => del(b.url)))
+            console.log(`[ANALYZE] Screenshoty smazany session=${sessionId}`)
+          } catch (cleanupErr) {
+            console.error('[ANALYZE] Screenshot cleanup error:', cleanupErr.message)
           }
         }
       } catch (err) {
