@@ -5,7 +5,7 @@
 // 3. shopContext (segment, obrat, problem) injektovan do promptu
 // 4. Tri vrstvy + matice dopad/narocnost (z v24)
 
-import { put, list, del } from '@vercel/blob'
+import { put, list, del, get } from '@vercel/blob'
 import { verifySessionToken, checkAnalyzeRateLimit } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
@@ -763,8 +763,9 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
             const slotId = blob.pathname.split('/').pop().replace('.jpg', '')
             const label = SLOT_LABELS[slotId] || slotId
             try {
-              const res = await fetch(blob.downloadUrl || blob.url)
-              if (!res.ok) continue
+              const blobData = await get(blob.url, { access: 'private' })
+              if (!blobData || !blobData.stream) continue
+              const res = new Response(blobData.stream)
               const arrayBuffer = await res.arrayBuffer()
               const base64 = Buffer.from(arrayBuffer).toString('base64')
               userContent.push({ type: 'text', text: `Screenshot: ${label}` })

@@ -1,5 +1,5 @@
 // Serves individual screenshots from Blob storage (pro zobrazeni v historii reportu)
-import { list } from '@vercel/blob'
+import { list, get } from '@vercel/blob'
 import { verifySessionToken } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
@@ -24,11 +24,12 @@ export async function GET(req) {
       return new Response('Not found', { status: 404 })
     }
 
-    const res = await fetch(blob.downloadUrl || blob.url)
-    if (!res.ok) return new Response('Blob fetch error', { status: 500 })
+    const blobData = await get(blob.url, { access: 'private' })
+    if (!blobData || !blobData.stream) {
+      return new Response('Blob fetch error', { status: 500 })
+    }
 
-    const arrayBuffer = await res.arrayBuffer()
-    return new Response(arrayBuffer, {
+    return new Response(blobData.stream, {
       headers: {
         'Content-Type': 'image/jpeg',
         'Cache-Control': 'private, max-age=3600',
