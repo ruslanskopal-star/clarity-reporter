@@ -731,7 +731,10 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
 
     // Sestav multimodalni content: screenshoty + text
     const SLOT_LABELS = {
-      homepage: 'Homepage', kategorie: 'Kategorie', produkt: 'Produkt',
+      homepage1: 'Homepage (1)', homepage2: 'Homepage (2)', homepage3: 'Homepage (3)',
+      kategorie1: 'Kategorie (1)', kategorie2: 'Kategorie (2)', kategorie3: 'Kategorie (3)',
+      produkt1: 'Produkt (1)', produkt2: 'Produkt (2)', produkt3: 'Produkt (3)',
+      predkosik1: 'Predkosik (1)', predkosik2: 'Predkosik (2)', predkosik3: 'Predkosik (3)',
       kosik1: 'Kosik (1)', kosik2: 'Kosik (2)', kosik3: 'Kosik (3)', kosik4: 'Kosik (4)', kosik5: 'Kosik (5)',
       thankyou: 'Dekovaci stranka', kontakt: 'Kontakt', doprava: 'Doprava a Platba',
       reklamace: 'Reklamace', onas: 'O nas', blog: 'Blog clanek',

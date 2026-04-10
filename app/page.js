@@ -35,9 +35,18 @@ const HISTORY_KEY = 'kris_analyzy_v1'
 const MAX_HISTORY = 5
 
 const SCREENSHOT_SLOTS = [
-  { id: 'homepage', label: 'Homepage' },
-  { id: 'kategorie', label: 'Kategorie' },
-  { id: 'produkt', label: 'Produkt' },
+  { id: 'homepage1', label: 'Homepage (1)' },
+  { id: 'homepage2', label: 'Homepage (2)' },
+  { id: 'homepage3', label: 'Homepage (3)' },
+  { id: 'kategorie1', label: 'Kategorie (1)' },
+  { id: 'kategorie2', label: 'Kategorie (2)' },
+  { id: 'kategorie3', label: 'Kategorie (3)' },
+  { id: 'produkt1', label: 'Produkt (1)' },
+  { id: 'produkt2', label: 'Produkt (2)' },
+  { id: 'produkt3', label: 'Produkt (3)' },
+  { id: 'predkosik1', label: 'Predkosik (1)' },
+  { id: 'predkosik2', label: 'Predkosik (2)' },
+  { id: 'predkosik3', label: 'Predkosik (3)' },
   { id: 'kosik1', label: 'Kosik (1)' },
   { id: 'kosik2', label: 'Kosik (2)' },
   { id: 'kosik3', label: 'Kosik (3)' },
