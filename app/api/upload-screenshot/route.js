@@ -1,26 +1,7 @@
 // API endpoint pro upload jednoho screenshotu do Blob storage
 // Kazdy screenshot jde samostatnym requestem aby se obeslo 4.5MB body limit /api/analyze
 import { put, del } from '@vercel/blob'
-import { createHmac } from 'crypto'
 import { verifySessionToken } from '../../lib/auth.js'
-
-// Debug wrapper — rekne nam presne kde verify selhal
-function debugVerify(token) {
-  if (!token) return 'no-token'
-  const secret = (process.env.TOTP_SECRET || '').trim()
-  if (!secret) return 'no-secret'
-  const parts = String(token).split('.')
-  if (parts.length !== 2) return `bad-format-parts=${parts.length}`
-  const [timestamp, signature] = parts
-  const age = Date.now() - parseInt(timestamp)
-  if (isNaN(age)) return 'nan-age'
-  if (age < 0) return `negative-age=${age}`
-  if (age > 24 * 60 * 60 * 1000) return `too-old=${Math.round(age/3600000)}h`
-  const expected = createHmac('sha256', secret).update(timestamp).digest('hex')
-  if (signature.length !== expected.length) return `siglen-mismatch got=${signature.length} exp=${expected.length}`
-  if (signature !== expected) return 'signature-mismatch'
-  return 'ok'
-}
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -29,18 +10,12 @@ const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024 // 5MB per screenshot
 
 export async function POST(req) {
   try {
-    const body = await req.json()
-    const { authToken, sessionId, slotId, base64 } = body
+    const { authToken, sessionId, slotId, base64 } = await req.json()
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-
-    // DEBUG: presna priciina selhani verify
-    const verifyResult = debugVerify(authToken)
-    if (verifyResult !== 'ok') {
-      console.warn(`[UPLOAD-SCREENSHOT] UNAUTHORIZED ip=${ip} reason=${verifyResult}`)
-      return new Response(JSON.stringify({
-        error: `Neautorizovany pristup (${verifyResult})`,
-      }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    if (!verifySessionToken(authToken)) {
+      console.warn(`[UPLOAD-SCREENSHOT] UNAUTHORIZED ip=${ip}`)
+      return new Response(JSON.stringify({ error: 'Token vyprsel, prihlas se znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
     if (!sessionId || !slotId || !base64 || typeof base64 !== 'string') {

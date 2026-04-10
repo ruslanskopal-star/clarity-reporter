@@ -361,8 +361,18 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight', authToken: authToken }),
       })
-        .then(function(res) { return res.json() })
+        .then(function(res) {
+          if (res.status === 401) {
+            setAuthToken(null)
+            localStorage.removeItem(AUTH_KEY)
+            setError('Token vyprsel, prihlas se znovu')
+            setPreflightLoading(false)
+            return null
+          }
+          return res.json()
+        })
         .then(function(data) {
+          if (!data) return
           lastPreflightUrl.current = normalized
           setPreflightDone(true)
           setPreflightLoading(false)
@@ -429,9 +439,16 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ authToken: authToken, sessionId: sid, slotId: targetSlot, base64: base64 }),
       })
+      if (res.status === 401) {
+        setAuthToken(null)
+        localStorage.removeItem(AUTH_KEY)
+        setError('Token vyprsel, prihlas se znovu')
+        setScreenshots({})
+        setSessionId('')
+        return
+      }
       var data = await res.json()
       if (!data.ok && data.error) {
-        console.error('Upload error [' + targetSlot + ']:', data.error)
         setError('Upload chyba: ' + data.error)
       }
       setScreenshots(function(prev) {
@@ -440,8 +457,7 @@ export default function Home() {
         return next
       })
     } catch (e) {
-      console.error('Upload network error:', e.message)
-      setError('Upload network chyba: ' + e.message)
+      setError('Upload chyba: ' + e.message)
       setScreenshots(function(prev) {
         var next = Object.assign({}, prev)
         next[targetSlot] = { thumb: base64, status: 'error' }
