@@ -266,7 +266,6 @@ export default function Home() {
   var [error, setError] = useState('')
   var [analysis, setAnalysis] = useState('')
   var [displayUrl, setDisplayUrl] = useState('')
-  var [withClarity, setWithClarity] = useState(true)
   var [seconds, setSeconds] = useState(0)
   var [phaseIndex, setPhaseIndex] = useState(0)
   var [history, setHistory] = useState([])
@@ -560,7 +559,7 @@ export default function Home() {
       var res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: url, withClarity: withClarity, authToken: authToken, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
+        body: JSON.stringify({ clientUrl: url, authToken: authToken, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
       })
 
       if (!res.ok || !res.body) {
@@ -686,20 +685,6 @@ export default function Home() {
               >
                 {loading ? 'Analyzuji...' : 'Spustit'}
               </button>
-            </div>
-
-            <div onClick={function() { setWithClarity(function(v) { return !v }) }} style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer',userSelect:'none',padding:'10px 14px',borderRadius:'8px',background:withClarity?'#0d1f0d':'#1a1a1a',border:'1px solid ' + (withClarity?'#2a6b2a':'#333'),transition:'all 0.2s'}}>
-              <div style={{width:'18px',height:'18px',borderRadius:'4px',border:'2px solid ' + (withClarity?'#4CAF50':'#555'),background:withClarity?'#4CAF50':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                {withClarity && <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-              </div>
-              <div>
-                <div style={{color:withClarity?'#4CAF50':'#666',fontSize:'13px',fontWeight:'700',fontFamily:'Arial,sans-serif'}}>
-                  {withClarity ? 'Klient ma Clarity nainstalovanou' : 'Klient nema Clarity'}
-                </div>
-                <div style={{color:'#555',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'2px'}}>
-                  {withClarity ? 'U doporuceni budu davat konkretni navod jak to overit v Clarity UI' : 'Quick Win #1 = instalovat Clarity pres GTM'}
-                </div>
-              </div>
             </div>
 
             {(preflightLoading || preflightDone) && (

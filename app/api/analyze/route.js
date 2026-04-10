@@ -243,6 +243,7 @@ function parseMeta(html, url) {
     canonical: get(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i),
     hasCouponField: /slevov|coupon|discount.*input|input.*coupon/i.test(html),
     hasProgressBar: /progress.*doprv|zbývá.*doprv|free.*ship|doprava.*zdarma.*\d/i.test(html),
+    hasClarity: /clarity\.ms\/tag|clarity\.ms\/s\/|static\.clarity\.ms/i.test(html),
   }
 }
 
@@ -318,7 +319,7 @@ function formatMultiPageContext(crawlData) {
 
 export async function POST(req) {
   try {
-    const { clientUrl, withClarity, reportMode, shopContext, action, authToken, sessionId } = await req.json()
+    const { clientUrl, reportMode, shopContext, action, authToken, sessionId } = await req.json()
 
     // Overeni session tokenu
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -327,7 +328,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup — zadej kod znovu' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
-    console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl} clarity=${!!withClarity}`)
+    console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl}`)
 
     if (!clientUrl || typeof clientUrl !== 'string' || clientUrl.length > 200) {
       return new Response(JSON.stringify({ error: 'Chybi URL klienta' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -408,10 +409,11 @@ export async function POST(req) {
     const crawlData = await fetchMultiPageData(baseUrl)
     const metaContext = formatMultiPageContext(crawlData)
 
-    // Clarity: bez API dat, pouze boolean flag jestli ma klient Clarity nainstalovanou
-    const clarityInstruction = withClarity
-      ? `Klient MA Clarity nainstalovanou. U kazdeho doporuceni uved konkretni krok jak ho overit v Clarity UI (heatmapy, recordings, funnels). NECITUJ konkretni cisla — nemame API data, jen navod pro klienta kam kliknout.`
-      : `Klient NEMA Clarity. V QUICK WINS jako prvni bod uved instalaci Clarity (max 2 vety: co to je + jak nainstalovat pres GTM).`
+    // Clarity detekce: autodetekce z HTML homepage (hleda clarity.ms tracking script)
+    const hasClarity = !!crawlData?.homepage?.hasClarity
+    const clarityInstruction = hasClarity
+      ? `Klient MA Clarity nainstalovanou (detekovano z HTML homepage). U kazdeho doporuceni uved konkretni krok jak ho overit v Clarity UI (heatmapy, recordings, funnels). NECITUJ konkretni cisla — nemame API data, jen navod pro klienta kam kliknout.`
+      : `Klient NEMA Clarity (nedetekovano v HTML). V QUICK WINS jako prvni bod uved instalaci Clarity (max 2 vety: co to je + jak nainstalovat pres GTM).`
 
     const now = new Date()
     const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -718,7 +720,7 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
             }))
             await put(filename, JSON.stringify({
               id, url: clientUrl, hostname, analysis: fullAnalysis,
-              withClarity: !!withClarity, seconds: Math.round((Date.now() - startTime) / 1000),
+              hasClarity: hasClarity, seconds: Math.round((Date.now() - startTime) / 1000),
               date: new Date().toISOString(),
               sessionId: sessionId || null,
               screenshots: screenshotRefs,
