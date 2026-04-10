@@ -20,7 +20,7 @@
 |--------|-------------|
 | Frontend | React 18 + Next.js 14 (App Router, single page) |
 | Styling | Inline styly (zadny CSS framework, zadny globals.css) |
-| Backend | Next.js Route Handlers (4 API endpointy) |
+| Backend | Next.js Route Handlers (6 API endpointu) |
 | AI | Anthropic Claude API (@anthropic-ai/sdk), streaming |
 | Auth | TOTP (otpauth) → HMAC session token |
 | Rate Limit | Upstash Redis (@upstash/ratelimit) |
@@ -35,35 +35,48 @@
 
 ```
 app/
-├── page.js              ← Frontend (auth UI, preflight, analyza, report render)
+├── page.js              ← Frontend (auth UI, preflight, screenshot upload, analyza, galerie)
 ├── layout.js            ← Root layout (minimal, zadny globals.css)
 ├── icon.svg             ← Favicon
 ├── lib/
 │   └── auth.js          ← Sdileny modul (HMAC tokeny, rate limit)
+├── knowledge/
+│   └── checklist.js     ← Klientsky CRO checklist (ESHOP BOOSTER, 4 VLNY, referencni weby)
 └── api/
-    ├── analyze/route.js ← Hlavni CRO analyza (Anthropic streaming, preflight, Blob save)
-    ├── auth/route.js    ← TOTP overeni → session token
-    ├── reports/route.js ← CRUD reportu (Blob: GET/POST/DELETE)
-    └── cron/daily-report/route.js ← Denni email souhrn (Resend)
+    ├── analyze/route.js            ← Hlavni CRO analyza (Anthropic multimodal + streaming)
+    ├── auth/route.js               ← TOTP overeni → session token
+    ├── reports/route.js            ← CRUD reportu (Blob: GET/POST/DELETE)
+    ├── upload-screenshot/route.js  ← Upload jednoho screenshotu do Blob (obchazi 4.5MB limit)
+    ├── screenshot/route.js         ← Servis screenshotu pro galerii v historii
+    └── cron/daily-report/route.js  ← Denni email souhrn (Resend)
 knowledge/
 ├── sekce-checkout.md    ← Knowledge base: checkout
 ├── sekce-detail-produktu.md
 ├── sekce-kosik.md
-├── reference-weby.md
-└── segmenty/            ← Segment-specificke KB (TODO)
+├── reference-weby.md    ← TODO v29: extrahovat referencni vzory z denatura.cz atd.
+└── segmenty/            ← Segment-specificke KB (TODO v30)
 scripts/
-└── kris-test.js         ← CLI tester (vola live API, overuje kriteria)
+├── kris-test.js             ← CLI tester (vola live API, overuje kriteria)
+└── read-latest-report.js    ← Cte posledni report z Blob storage pro dany hostname
 ```
 
 ### Data Flow
 
 1. Uzivatel zada TOTP kod → `POST /api/auth` → overi TOTP → vrati HMAC session token
 2. Uzivatel zada URL → `POST /api/analyze` (action=preflight) → detekce kategorie + otazky
-3. Uzivatel klikne Spustit → `POST /api/analyze` (streaming) → Anthropic API → SSE stream → klient renderuje
-4. Po dokonceni streamu: server ulozi report do Vercel Blob (server-side save v route.js)
-5. Klient take ulozi do Blob pres `POST /api/reports`
-6. Report zobrazen → uzivatel muze kopirovat nebo tisknout (PDF pres print dialog)
-7. Denne v 8:00 UTC: `GET /api/cron/daily-report` → posle email pres Resend
+3. Uzivatel nahraje screenshoty → klientsky canvas resize na 1200×1500 JPEG 0.75 →
+   `POST /api/upload-screenshot` (per chunk) → Blob `screenshots/{sessionId}/{slotId}.jpg`
+4. Group sloty (homepage/kategorie/produkt/predkosik/kosik): auto-split dlouheho screenshotu
+   na 1500px kusy, distribuce do slotu 1-6
+5. Uzivatel klikne Spustit → `POST /api/analyze` (streaming, sessionId) →
+   server stahne vsechny screenshoty z Blob → multimodal content (images + text) →
+   Anthropic API (`claude-sonnet-4-6`) → SSE stream → klient renderuje
+6. System prompt: checklist.js (max priorita) + KRIS_KNOWLEDGE_BASE (nizsi) + crawl meta + Clarity detekce
+7. Po dokonceni streamu: server ulozi report do Blob `reports/{hostname}/{id}.json`
+   vcetne referencí na screenshoty (sessionId + slot names)
+8. Screenshoty NEMAZOU po analyze — zustavaji v Blob pro historii
+9. Historie: klient vola `/api/screenshot?sessionId=X&slot=Y&token=Z` pro galerii
+10. Denne v 8:00 UTC: `GET /api/cron/daily-report` → posle email pres Resend
 
 ### API Response Format
 
@@ -96,10 +109,11 @@ git push             # Auto-deploy na Vercel z main (~60s)
 ---
 
 ## Aktualni stav
-- route.js = route_v6_edge_v27 (preflight, role/audience/cíl, doptávání, server-side Blob save, auth + rate limit)
-- page.js = page_v18 (TOTP auth obrazovka, preflight UI, Blob save)
-- Další verze: route → v28 | page → v19
+- route.js = route_v6_edge_v28 (visual analysis, multimodal, checklist, autodetekce Clarity)
+- page.js = page_v19 (25 upload slotu, auto-split, galerie v historii)
+- Další verze: route → v29 | page → v20
 - Vercel projekt: jen `cro-report` (duplikát `clarity-reporter-njmo` smazán)
+- Clarity API odstraneno — 8× CLARITY_API_TOKEN_* env vars smazane z Vercelu
 
 ## Co je hotovo ve v25
 ✅ Vercel env vars: RESEND_API_KEY + KRIS_REPORT_EMAIL + CRON_SECRET + ANTHROPIC_API_KEY přidány
@@ -128,13 +142,37 @@ git push             # Auto-deploy na Vercel z main (~60s)
 ✅ /api/reports: GET/POST/DELETE s auth
 ✅ Smazán duplikátní projekt clarity-reporter-njmo
 
-## Co zbývá — v28
+## Co je hotovo ve v28 (2026-04-11)
+✅ 25 upload slotu na screenshoty (Homepage/Kategorie/Produkt/Predkosik/Kosik ×6, + singles)
+✅ Auto-split dlouhych screenshotu (group sloty 1200×1500 kusy)
+✅ Klientska komprese JPEG 0.75 @ 1200 width
+✅ Separate `/api/upload-screenshot` endpoint (obchází 4.5MB body limit)
+✅ Blob storage: `screenshots/{sessionId}/{slotId}.jpg` (private)
+✅ Multimodal Anthropic API (screenshoty + text) - `claude-sonnet-4-6`
+✅ Screenshoty se nemažou - historie galerie pod analýzou
+✅ Novy endpoint `/api/screenshot` pro servis screenů do galerie
+✅ Odstraněn Clarity API fetch (3 denní data = marginal)
+✅ Autodetekce Clarity z HTML homepage (clarity.ms script)
+✅ Klientský CRO checklist v `app/knowledge/checklist.js` (4 VLNY, referenční weby)
+✅ Checklist injektovaný do system promptu s NEJVYŠŠÍ prioritou
+✅ Tři-vrstvy format: [CRO PRINCIP] / [SEGMENT] / [JAK OVERIT V CLARITY]
+✅ 401 handling: expired token → auto logout
+✅ Bez authTokenu vše skryté (historie, analýza, patička)
+✅ `scripts/read-latest-report.js` pro čtení reportů z Blob
+✅ Otestováno na denatura.cz (76/100, konkrétní citace, VLNY fungují)
+
+## Co zbývá — v29 (Referenční weby)
+❌ Extrahovat z denatura.cz analýzy silné prvky do `knowledge/reference-weby.md`
+❌ Napojit reference-weby.md do system promptu s instrukcí "inspiruj se"
+❌ Otestovat na jiném kosmetickém e-shopu (porovnání s denaturou)
+
+## Co zbývá — v30 (Segmenty)
 ❌ Knowledge base segmenty — vyplnit kosmetika.md, moda.md, elektronika.md
 ❌ Segment-specifické benchmarky v promptu (dle vybraného segmentu)
 ❌ Smazat staré Blob stores v dashboardu (kris-reports, kkwiki-blob)
 
 ## Další krok
-v28: vyplnit knowledge base pro top 3 segmenty, segment-specifické benchmarky
+v29: reference-weby.md z denatura.cz — viz @PLAN.md
 Kompletni roadmap viz @PLAN.md
 
 ---

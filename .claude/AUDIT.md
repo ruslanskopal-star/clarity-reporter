@@ -10,6 +10,21 @@
 - **Výsledek:** 3 CRITICAL + 4 HIGH opraveno, vše čisté
 - **Další plánovaný:** 2026-04-16
 
+## Mezi audity: změny architektury (2026-04-11, v28)
+- Přidány 2 nové endpointy: `/api/upload-screenshot` (POST + DELETE), `/api/screenshot` (GET)
+- Oba mají auth check přes `verifySessionToken`
+- Upload endpoint: validace `sessionId` a `slotId` regex, limit 5MB per screenshot
+- Screenshot endpoint: validace sessionId/slot, cestný prefix `screenshots/{sessionId}/`
+- Odstraněno Clarity API fetch (~200 řádků), 8× CLARITY_API_TOKEN_* env vars smazané
+- Autodetekce Clarity z HTML homepage (clarity.ms script)
+- Klientský CRO checklist v `app/knowledge/checklist.js` — NEJVYŠŠÍ priorita v system promptu
+- Screenshoty v Blob se po analýze neperují (zůstávají pro historii) → **Blob se plní, nutný cron cleanup v budoucnu**
+- Debug error propagace dočasně zapnutá → vrácena na generickou před commitem
+- **Při dalším auditu zkontrolovat:**
+  - `/api/upload-screenshot` + `/api/screenshot` endpointy v sekci 2 (Endpoint audit)
+  - Blob storage velikost a stáří screenshotů
+  - Že žádný endpoint neleakuje e.message
+
 ---
 
 ## 1. Security audit
