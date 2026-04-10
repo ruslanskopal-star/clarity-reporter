@@ -37,8 +37,8 @@ export async function POST(req) {
     console.log(`[UPLOAD-SCREENSHOT] OK ip=${ip} session=${sessionId} slot=${slotId} size=${buffer.length}`)
     return new Response(JSON.stringify({ ok: true, slotId }), { headers: { 'Content-Type': 'application/json' } })
   } catch (e) {
-    console.error('[UPLOAD-SCREENSHOT] Error:', e.message, e.stack)
-    return new Response(JSON.stringify({ error: 'Chyba pri nahravani: ' + (e.message || 'unknown') }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    console.error('[UPLOAD-SCREENSHOT] Error:', e.message)
+    return new Response(JSON.stringify({ error: 'Chyba pri nahravani' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
 }
 
