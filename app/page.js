@@ -295,7 +295,22 @@ export default function Home() {
       var saved = localStorage.getItem(HISTORY_KEY)
       if (saved) setHistory(JSON.parse(saved))
       var token = localStorage.getItem(AUTH_KEY)
-      if (token) setAuthToken(token)
+      if (token) {
+        // Overeni veku tokenu (format: timestamp.signature)
+        var parts = token.split('.')
+        if (parts.length === 2) {
+          var ts = parseInt(parts[0])
+          var age = Date.now() - ts
+          if (isNaN(age) || age > 24 * 60 * 60 * 1000 || age < 0) {
+            localStorage.removeItem(AUTH_KEY)
+            return
+          }
+        } else {
+          localStorage.removeItem(AUTH_KEY)
+          return
+        }
+        setAuthToken(token)
+      }
     } catch(e) {}
   }, [])
 
