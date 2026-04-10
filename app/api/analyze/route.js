@@ -675,7 +675,7 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
     if (!anthropicResponse.ok) {
       const err = await anthropicResponse.text()
       console.error('[ANALYZE] Anthropic API error:', anthropicResponse.status, err)
-      return new Response(JSON.stringify({ error: 'Chyba AI sluzby' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ error: `AI ${anthropicResponse.status}: ${err.slice(0, 400)}` }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     const { readable, writable } = new TransformStream()
