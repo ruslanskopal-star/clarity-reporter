@@ -791,14 +791,14 @@ export default function Home() {
             {loading && <LoadingAnimation seconds={seconds} phase={LOADING_PHASES[phaseIndex]} />}
           </div>}
 
-          {history.length > 0 && !loading && !analysis && (
+          {authToken && history.length > 0 && !loading && !analysis && (
             <div className="no-print" style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px',marginBottom:'32px'}}>
               <div style={{color:'#666',fontSize:'12px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'14px',fontFamily:'Arial,sans-serif'}}>Posledni analyzy</div>
               {history.map(function(item) { return <HistoryItem key={item.id} item={item} onOpen={openFromHistory} onDelete={deleteFromHistory} /> })}
             </div>
           )}
 
-          {analysis && (
+          {authToken && analysis && (
             <div className="print-area" style={{background:'#1a1a1a',border:'2px solid #333',borderRadius:'16px',padding:'32px'}}>
               <div className="no-print" style={{display:'flex',justifyContent:'flex-end',marginBottom:'16px'}}>
                 <button onClick={handleNovaAnalyza} style={{padding:'8px 16px',fontSize:'12px',fontWeight:'700',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'8px',cursor:'pointer'}}>Nova analyza</button>
@@ -853,9 +853,11 @@ export default function Home() {
             </div>
           )}
 
-          <p className="no-print" style={{textAlign:'center',color:'#333',fontSize:'12px',marginTop:'24px',fontFamily:'Arial,sans-serif'}}>
-            ESHOP BOOSTER 2026 &bull; KRIS v6 &bull; Ruslan Skopal
-          </p>
+          {authToken && (
+            <p className="no-print" style={{textAlign:'center',color:'#333',fontSize:'12px',marginTop:'24px',fontFamily:'Arial,sans-serif'}}>
+              ESHOP BOOSTER 2026 &bull; KRIS v6 &bull; Ruslan Skopal
+            </p>
+          )}
         </div>
       </div>
     </>
