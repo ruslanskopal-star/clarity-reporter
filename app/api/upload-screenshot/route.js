@@ -10,12 +10,22 @@ const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024 // 5MB per screenshot
 
 export async function POST(req) {
   try {
-    const { authToken, sessionId, slotId, base64 } = await req.json()
+    const body = await req.json()
+    const { authToken, sessionId, slotId, base64 } = body
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!verifySessionToken(authToken)) {
-      console.warn(`[UPLOAD-SCREENSHOT] UNAUTHORIZED ip=${ip}`)
-      return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+
+    // DEBUG: zjistit proc verify selhava
+    const tokenType = typeof authToken
+    const tokenLen = authToken ? String(authToken).length : 0
+    const tokenPreview = authToken ? String(authToken).slice(0, 20) : 'null'
+    const verified = verifySessionToken(authToken)
+
+    if (!verified) {
+      console.warn(`[UPLOAD-SCREENSHOT] UNAUTHORIZED ip=${ip} type=${tokenType} len=${tokenLen} preview=${tokenPreview}`)
+      return new Response(JSON.stringify({
+        error: `Neautorizovany pristup (type=${tokenType} len=${tokenLen})`,
+      }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
     if (!sessionId || !slotId || !base64 || typeof base64 !== 'string') {
