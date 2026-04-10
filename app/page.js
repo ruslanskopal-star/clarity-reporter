@@ -694,10 +694,10 @@ export default function Home() {
               </div>
               <div>
                 <div style={{color:withClarity?'#4CAF50':'#666',fontSize:'13px',fontWeight:'700',fontFamily:'Arial,sans-serif'}}>
-                  {withClarity ? 'Mam pristup do Microsoft Clarity' : 'Nemam pristup do Microsoft Clarity'}
+                  {withClarity ? 'Klient ma Clarity nainstalovanou' : 'Klient nema Clarity'}
                 </div>
                 <div style={{color:'#555',fontSize:'11px',fontFamily:'Arial,sans-serif',marginTop:'2px'}}>
-                  {withClarity ? 'Analyza bude zahrnovat doporuceni pro heatmapy, rage clicks a session recordings' : 'Analyza bude postavena na best practices bez dat z Clarity'}
+                  {withClarity ? 'U doporuceni budu davat konkretni navod jak to overit v Clarity UI' : 'Quick Win #1 = instalovat Clarity pres GTM'}
                 </div>
               </div>
             </div>

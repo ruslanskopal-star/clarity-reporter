@@ -199,135 +199,6 @@ Prvky s nejvyssim dopadem (serazene):
 - Formulare: labely musi byt viditelne, ne jen placeholder
 `
 
-// Clarity Data Export API
-// Docs: https://learn.microsoft.com/en-us/clarity/clarity-data-export-api
-// Endpoint: GET https://www.clarity.ms/export-data/api/v1/project-live-insights
-// Auth: Bearer token (projekt-specificky JWT z Clarity Settings → Data Export)
-// Limit: max 10 requestu/projekt/den, data pouze za posledni 1-3 dny
-// Projekt je identifikovan tokenem, ne URL parametrem
-
-const CLARITY_API = 'https://www.clarity.ms/export-data/api/v1/project-live-insights'
-
-// Mapovani domeny na token: CLARITY_API_TOKEN_<DOMAIN_KEY>
-// Priklad: spinkids.sk → CLARITY_API_TOKEN_SPINKIDS_SK
-function getClarityToken(hostname) {
-  const key = hostname
-    .replace(/^www\./, '')
-    .replace(/[\.\-]/g, '_')
-    .toUpperCase()
-  return process.env[`CLARITY_API_TOKEN_${key}`] || null
-}
-
-async function fetchClarityData(hostname) {
-  try {
-    const token = getClarityToken(hostname)
-    if (!token) return null
-
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    }
-
-    // 2 requesty: celkova data + breakdown podle zarizeni (mobile/desktop)
-    // numOfDays=3 = maximum dostupne (posledni 72 hodin)
-    const [overallRes, deviceRes] = await Promise.all([
-      fetch(`${CLARITY_API}?numOfDays=3`, { headers }),
-      fetch(`${CLARITY_API}?numOfDays=3&dimension1=Device`, { headers }),
-    ])
-
-    if (!overallRes.ok) {
-      const errText = await overallRes.text()
-      console.error(`Clarity API ${overallRes.status}:`, errText)
-      return null
-    }
-
-    const [overall, deviceBreakdown] = await Promise.all([
-      overallRes.json(),
-      deviceRes.ok ? deviceRes.json() : null,
-    ])
-
-    return { overall, deviceBreakdown }
-  } catch (e) {
-    console.error('fetchClarityData error:', e.message)
-    return null
-  }
-}
-
-// Parsovani Clarity response na citelny kontext pro Claude
-// Response format: [{ metricName: "Traffic", information: [{...}] }, ...]
-function parseClarityMetric(data, metricName) {
-  if (!Array.isArray(data)) return null
-  return data.find(m => m.metricName === metricName)?.information || null
-}
-
-function extractMetric(data, metricName) {
-  if (!Array.isArray(data)) return null
-  return data.find(m => m.metricName === metricName)?.information ?? null
-}
-
-function formatDeviceSection(deviceBreakdown, metricName, label) {
-  const rows = extractMetric(deviceBreakdown, metricName)
-  if (!rows) return ''
-  const lines = []
-  for (const row of rows) {
-    const dev = row.Device ?? row.device ?? 'Unknown'
-    if (metricName === 'Traffic') {
-      lines.push(`  ${dev}: sessions=${row.totalSessionCount ?? '?'}, uzivatele=${row.distantUserCount ?? '?'}, stranky/session=${Number(row.PagesPerSessionPercentage ?? 0).toFixed(2)}`)
-    } else {
-      const pct = row.sessionsWithMetricPercentage ?? row.percentage ?? '?'
-      lines.push(`  ${dev}: ${pct}% sessions postizeno`)
-    }
-  }
-  return lines.length ? `${label}:\n${lines.join('\n')}` : ''
-}
-
-function formatClarityContext(clarityData) {
-  if (!clarityData) return ''
-  const { overall, deviceBreakdown } = clarityData
-  const lines = ['\nREALNA DATA Z MICROSOFT CLARITY (posledni 3 dny):']
-
-  if (Array.isArray(overall)) {
-    for (const { metricName: name, information: info } of overall) {
-      if (!info?.length) continue
-      const r = info[0]
-      if (name === 'Traffic') {
-        lines.push(`- Celkem sessions: ${r.totalSessionCount ?? '?'} | Unikatni uzivatele: ${r.distantUserCount ?? '?'} | Stranky/session: ${Number(r.PagesPerSessionPercentage ?? 0).toFixed(2)}`)
-      } else if (name === 'RageClickCount' || name === 'Rage Click Count') {
-        lines.push(`- Rage clicks: ${r.sessionsWithMetricPercentage ?? '?'}% sessions (${r.sessionsCount ?? '?'} sessions, ${r.subTotal ?? '?'} kliknuti)`)
-      } else if (name === 'DeadClickCount' || name === 'Dead Click Count') {
-        lines.push(`- Dead clicks: ${r.sessionsWithMetricPercentage ?? '?'}% sessions (${r.sessionsCount ?? '?'} sessions, ${r.subTotal ?? '?'} kliknuti)`)
-      } else if (name === 'QuickbackClick' || name === 'Quickback Click') {
-        lines.push(`- Quick backs: ${r.sessionsWithMetricPercentage ?? '?'}% sessions`)
-      } else if (name === 'ScrollDepth' || name === 'Scroll Depth') {
-        lines.push(`- Scroll depth: ${r.sessionsWithMetricPercentage ?? '?'}% sessions scrolluje pod 50 %`)
-      } else if (name === 'EngagementTime' || name === 'Engagement Time') {
-        lines.push(`- Aktivni cas: ${r.subTotal ?? r.avgActiveTime ?? '?'}`)
-      } else if (name === 'ExcessiveScroll' || name === 'Excessive Scroll') {
-        lines.push(`- Excessive scroll: ${r.sessionsWithMetricPercentage ?? '?'}% sessions`)
-      }
-    }
-  }
-
-  if (Array.isArray(deviceBreakdown)) {
-    const trafficSection = formatDeviceSection(deviceBreakdown, 'Traffic', '📱🖥️ Breakdown podle zarizeni (Traffic)')
-    if (trafficSection) lines.push(trafficSection)
-    const rageSection = formatDeviceSection(deviceBreakdown, 'RageClickCount', '📱🖥️ Rage clicks podle zarizeni')
-      || formatDeviceSection(deviceBreakdown, 'Rage Click Count', '📱🖥️ Rage clicks podle zarizeni')
-    if (rageSection) lines.push(rageSection)
-    const deadSection = formatDeviceSection(deviceBreakdown, 'DeadClickCount', '📱🖥️ Dead clicks podle zarizeni')
-      || formatDeviceSection(deviceBreakdown, 'Dead Click Count', '📱🖥️ Dead clicks podle zarizeni')
-    if (deadSection) lines.push(deadSection)
-  }
-
-  const sessions = clarityData?.overall?.find?.(m => m.metricName === 'Traffic')?.information?.[0]?.totalSessionCount ?? 0
-  if (sessions > 0 && sessions < 500) {
-    lines.push(`⚠️ UPOZORNENI: Pouze ${sessions} sessions za 3 dny — malý vzorek dat. Cituj čísla jako orientační, ne jako statisticky spolehlivá. Doporučení postav primárně na CRO principech a odborném odhadu.`)
-  }
-
-  lines.push('DULEZITE: Tato cisla jsou REALNA behavioralni data POUZE tohoto webu. Cituj je primo v analyze s konkretnimi hodnotami. Pokud mas mobilni data, Mobilni verze dostane skutecne skore, ne N/A.')
-  return lines.join('\n') + '\n'
-}
-
 async function fetchOnePage(url, timeoutMs = 8000) {
   try {
     const ctrl = new AbortController()
@@ -534,19 +405,13 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Prilis mnoho analyz, zkuste za hodinu' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
 
-    const [crawlData, clarityData] = await Promise.all([
-      fetchMultiPageData(baseUrl),
-      fetchClarityData(hostname),
-    ])
-
-    const clarityDataContext = formatClarityContext(clarityData)
+    const crawlData = await fetchMultiPageData(baseUrl)
     const metaContext = formatMultiPageContext(crawlData)
 
-    const clarityInstruction = clarityData
-      ? `Klient MA Clarity a MAME REALNA DATA (viz sekce REALNA DATA Z MICROSOFT CLARITY). Tato data patri POUZE tomuto webu — nikdy je nepouzivej pro jine projekty. Cituj konkretni hodnoty primo v analyze. Pokud mas mobilni data, Mobilni verze dostane skutecne skore 1-10, ne N/A.`
-      : withClarity
-        ? `Klient MA Clarity ale nemame API data pro tuto analyzu. U kazdeho doporuceni uved konkretni krok jak ho overit v Clarity (vrstva 📊 [CLARITY DATA]).`
-        : `Klient NEMA Clarity. V QUICK WINS jako prvni bod uved instalaci Clarity (max 2 vety: co to je + jak nainstalovat pres GTM).`
+    // Clarity: bez API dat, pouze boolean flag jestli ma klient Clarity nainstalovanou
+    const clarityInstruction = withClarity
+      ? `Klient MA Clarity nainstalovanou. U kazdeho doporuceni uved konkretni krok jak ho overit v Clarity UI (heatmapy, recordings, funnels). NECITUJ konkretni cisla — nemame API data, jen navod pro klienta kam kliknout.`
+      : `Klient NEMA Clarity. V QUICK WINS jako prvni bod uved instalaci Clarity (max 2 vety: co to je + jak nainstalovat pres GTM).`
 
     const now = new Date()
     const dateStr = now.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -581,9 +446,9 @@ ZAKAZANO: Celkove skore a vypocet opakovat — uved ho POUZE JEDNOU, bezprostred
 Pozor: Skore musi byt relativni vuci kategorii a velikosti e-shopu.
 Niche specializovany e-shop hodnoť vyse za autenticky obsah a odbornost.
 
-PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze". Format: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze."
+PRAVIDLO N/A — POUZE PRO MOBILNI VERZI: N/A smis pouzit JEN pro oblast "Mobilni verze". Format: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji mobilni screenshoty."
 ZAKAZANO — nikdy nepis: "Mobilni verze: 5/10" nebo jake koliv cislo pro mobilni verzi.
-SPRAVNE: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji Clarity heatmapy mobilni verze."
+SPRAVNE: "Mobilni verze (N/A): N/A — Pro objektivni hodnoceni potrebuji mobilni screenshoty."
 VSECHNY OSTATNI oblasti (Duveryhodnost, Produktove stranky, Navigace, Objednavkovy proces, Homepage, SEO, Zakaznicka pece) MUSI vzdy dostat konkretni skore 1-10. Nikdy nepouzivej N/A pro jine oblasti nez Mobilni verze.
 `
 
@@ -611,21 +476,17 @@ PRAVIDLO 9 – NO VERSION FOOTER: Na konci NIKDY nepridavej nazev systemu, verzi
 PRAVIDLO 10 – MAX 6 STRAN: Celkova delka analyzy MAXIMALNE 6 stran A4. Pokud bys presahl, zkrat: Quick Wins na max 3 vety, Stredni priority na 1-2 vety, Roadmap na jeden radek na polozku.
 `
 
-    const clarityLayerText = clarityData
-      ? 'Cituj KONKRETNI CISLO z realnych dat tohoto webu (viz REALNA DATA Z CLARITY nahore). Priklad: "Dead click rate je 1,59 % — to znamena ze uzivatele klikaji na prvky ktere nejsou klikatelne."'
-      : 'Uved konkretni krok jak tuto oblast overit v Clarity. Priklad: "Otevri Heatmapu stranky /kosik → zkontroluj zda uzivatele klikaji na pole slevoveho kodu."'
-
     const threeLayerFormat = `
 KRITICKE: Kazde doporuceni MUSI obsahovat PRESNE TYTO TRI RADKY ve formatu nize. Nikdy je nevynechej, nikdy je nespoj do jednoho odstavce.
 
 🎯 **[CRO PRINCIP]:** [1 veta — obecny princip proc tato zmena zvysuje konverzi]
 👥 **[SEGMENT]:** [1 veta — konkretni zkusenost z podobnych e-shopu v teto kategorii, idealne s cislem dopadu]
-📊 **[CLARITY DATA]:** ${clarityLayerText}
+📊 **[JAK OVERIT V CLARITY]:** [1 veta — navod kam v Clarity UI kliknout, co tam hledat. NIKDY necituj cisla — nemas API data, jen navadis klienta.]
 
 PRIKLAD SPRAVNEHO VYSTUPU (pro doporuceni o slevovem kodu):
 🎯 **[CRO PRINCIP]:** Viditelne pole pro slevovy kod aktivuje u zakaznika vedomí ze "sleva existuje ale ja ji nemam" a zpusobuje odchod na agregatory pred dokoncenim objednavky.
 👥 **[SEGMENT]:** E-shopy s detskym zbozim ktere skryly slevovy kod za checkbox zaznamenaly prumerny rust konverze z kosiku o 11 %.
-📊 **[CLARITY DATA]:** ${clarityData ? 'Podle Clarity dat ma tento web dead click rate 1,59 % — zkontroluj zda jsou rage clicks soustredeny na oblast slevoveho kodu v nahrávkach segmentu "navstivil kosik ale nenakoupil".' : 'Otevri Recordings → filtr "navstivil kosik ale nenakoupil" → hledej zaznamy kde uzivatel klikne do pole slevoveho kodu a pak opusti stranku do 60 sekund.'}
+📊 **[JAK OVERIT V CLARITY]:** Otevri Recordings → filtr "navstivil kosik ale nenakoupil" → hledej zaznamy kde uzivatel klikne do pole slevoveho kodu a pak opusti stranku do 60 sekund.
 
 PRIKLAD SPATNEHO VYSTUPU (ZAKAZANO):
 "Doporucujeme skryt slevovy kod. Toto zvysi konverze." — TOTO JE ZAKAZANO, chybi vsechny tri vrstvy.
@@ -726,7 +587,6 @@ Doplnujici znalostni baze (nizsi priorita, pouzij jen pro kontext nebo kategorii
 ${KRIS_KNOWLEDGE_BASE}
 ${shopContextBlock}
 ${metaContext}
-${clarityDataContext}
 ${clarityInstruction}
 
 Dnesni datum: ${dateStr}.
