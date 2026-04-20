@@ -289,6 +289,7 @@ export default function Home() {
   var [screenshots, setScreenshots] = useState({}) // { slotId: { thumb: base64, status: 'uploading'|'ok'|'error' } }
   var [sessionId, setSessionId] = useState('')
   var [viewingGallery, setViewingGallery] = useState(null) // {sessionId, slots}
+  var [galleryUrls, setGalleryUrls] = useState({}) // { slot: signedUrl }
   var timerRef = useRef(null)
   var phaseRef = useRef(null)
   var preflightRef = useRef(null)
@@ -317,6 +318,26 @@ export default function Home() {
       }
     } catch(e) {}
   }, [])
+
+  // Fetch signed URLs kdyz se zobrazi galerie (token NIKDY v URL)
+  useEffect(function() {
+    if (!viewingGallery || !viewingGallery.slots.length || !authToken) {
+      setGalleryUrls({})
+      return
+    }
+    var cancelled = false
+    fetch('/api/screenshot-urls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: authToken, sessionId: viewingGallery.sessionId, slots: viewingGallery.slots })
+    }).then(function(r) {
+      if (r.status === 401) { localStorage.removeItem(AUTH_KEY); setAuthToken(''); return }
+      return r.json()
+    }).then(function(data) {
+      if (!cancelled && data && data.urls) setGalleryUrls(data.urls)
+    }).catch(function() {})
+    return function() { cancelled = true }
+  }, [viewingGallery, authToken])
 
   async function handleAuth() {
     if (!authCode.trim() || authCode.length !== 6) return
@@ -824,7 +845,8 @@ export default function Home() {
                     {viewingGallery.slots.map(function(slot) {
                       var slotDef = SCREENSHOT_SLOTS.find(function(s) { return s.id === slot })
                       var label = slotDef ? slotDef.label : slot
-                      var src = '/api/screenshot?sessionId=' + encodeURIComponent(viewingGallery.sessionId) + '&slot=' + encodeURIComponent(slot) + '&token=' + encodeURIComponent(authToken || '')
+                      var src = galleryUrls[slot]
+                      if (!src) return <div key={slot} style={{border:'1px solid #333',borderRadius:'6px',background:'#111',padding:'20px',textAlign:'center',color:'#555',fontSize:'11px'}}>Nacitam...</div>
                       return (
                         <a key={slot} href={src} target="_blank" rel="noreferrer" style={{border:'1px solid #333',borderRadius:'6px',overflow:'hidden',textDecoration:'none',background:'#111'}}>
                           <img src={src} alt={label} style={{width:'100%',display:'block'}} loading="lazy" />

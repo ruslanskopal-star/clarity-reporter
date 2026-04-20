@@ -1,17 +1,19 @@
 // Serves individual screenshots from Blob storage (pro zobrazeni v historii reportu)
+// Auth: signed URL (sig + expires) — session token se NIKDY neposilá v URL
 import { list, get } from '@vercel/blob'
-import { verifySessionToken } from '../../lib/auth.js'
+import { verifyScreenshotSignature } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url)
-    const authToken = searchParams.get('token')
     const sessionId = searchParams.get('sessionId')
     const slot = searchParams.get('slot')
+    const sig = searchParams.get('sig')
+    const expires = searchParams.get('expires')
 
-    if (!verifySessionToken(authToken)) {
+    if (!verifyScreenshotSignature(sessionId, slot, sig, expires)) {
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
     if (!sessionId || !slot || !/^[a-zA-Z0-9]{8,64}$/.test(sessionId) || !/^[a-zA-Z0-9]{1,30}$/.test(slot)) {

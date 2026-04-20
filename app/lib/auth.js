@@ -57,3 +57,28 @@ export async function checkAnalyzeRateLimit(ip) {
   const { success } = await analyzeLimiter.limit(ip)
   return success
 }
+
+// Signed screenshot URLs (15 min TTL) — token NIKDY nejde do URL
+const SCREENSHOT_URL_TTL = 15 * 60 * 1000 // 15 minut
+
+export function createScreenshotSignature(sessionId, slot) {
+  const secret = (process.env.TOTP_SECRET || '').trim()
+  const expires = (Date.now() + SCREENSHOT_URL_TTL).toString()
+  const payload = `${sessionId}:${slot}:${expires}`
+  const sig = createHmac('sha256', secret).update(payload).digest('hex')
+  return { sig, expires }
+}
+
+export function verifyScreenshotSignature(sessionId, slot, sig, expires) {
+  if (!sessionId || !slot || !sig || !expires) return false
+  const secret = (process.env.TOTP_SECRET || '').trim()
+  if (!secret) return false
+
+  const expiresNum = parseInt(expires)
+  if (isNaN(expiresNum) || Date.now() > expiresNum) return false
+
+  const payload = `${sessionId}:${slot}:${expires}`
+  const expected = createHmac('sha256', secret).update(payload).digest('hex')
+  if (sig.length !== expected.length) return false
+  return timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))
+}
