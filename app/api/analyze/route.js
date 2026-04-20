@@ -6,7 +6,7 @@
 // 4. Tri vrstvy + matice dopad/narocnost (z v24)
 
 import { put, list, del, get } from '@vercel/blob'
-import { verifySessionToken, checkAnalyzeRateLimit } from '../../lib/auth.js'
+import { requireSession, checkAnalyzeRateLimit } from '../../lib/auth.js'
 import { ESHOP_BOOSTER_CHECKLIST } from '../../knowledge/checklist.js'
 
 export const runtime = 'nodejs'
@@ -346,14 +346,14 @@ function formatMultiPageContext(crawlData) {
 
 export async function POST(req) {
   try {
-    const { clientUrl, reportMode, shopContext, action, authToken, sessionId } = await req.json()
-
-    // Overeni session tokenu
+    const session = await requireSession(req)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!verifySessionToken(authToken)) {
-      console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip} url=${clientUrl} action=${action || 'analyze'}`)
+    if (!session.ok) {
+      console.warn(`[ANALYZE] UNAUTHORIZED ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
+
+    const { clientUrl, reportMode, shopContext, action, sessionId } = await req.json()
 
     console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl}`)
 

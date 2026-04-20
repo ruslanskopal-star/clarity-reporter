@@ -1,33 +1,26 @@
-// API endpoint pro upload jednoho screenshotu do Blob storage
-// Kazdy screenshot jde samostatnym requestem aby se obeslo 4.5MB body limit /api/analyze
+// Upload jednoho screenshotu do Blob storage (auth pres HttpOnly cookie)
 import { put, del } from '@vercel/blob'
-import { verifySessionToken, checkUploadRateLimit, incrementSessionSlots } from '../../lib/auth.js'
+import { requireSession, checkUploadRateLimit, incrementSessionSlots } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024 // 5MB per screenshot
-
-// Base64 pres JSON body ma v Vercelu hard limit ~4.5MB, tohle je defensive check
+const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024
 const MAX_BASE64_LENGTH = Math.ceil(MAX_SCREENSHOT_BYTES * 4 / 3) + 4
 
 function isImageBuffer(buf) {
   if (!buf || buf.length < 4) return false
-  // JPEG: FF D8 FF
   if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return true
-  // PNG: 89 50 4E 47
   if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return true
-  // WEBP: RIFF....WEBP
   if (buf.length >= 12 && buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 && buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return true
   return false
 }
 
 export async function POST(req) {
   try {
-    const { authToken, sessionId, slotId, base64 } = await req.json()
-
+    const session = await requireSession(req)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!verifySessionToken(authToken)) {
+    if (!session.ok) {
       console.warn(`[UPLOAD-SCREENSHOT] UNAUTHORIZED ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
@@ -36,6 +29,8 @@ export async function POST(req) {
       console.warn(`[UPLOAD-SCREENSHOT] RATE LIMITED ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Prilis mnoho uploadu, zkuste pozdeji' }), { status: 429, headers: { 'Content-Type': 'application/json' } })
     }
+
+    const { sessionId, slotId, base64 } = await req.json()
 
     if (!sessionId || !slotId || !base64 || typeof base64 !== 'string') {
       return new Response(JSON.stringify({ error: 'Chybi data' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -74,27 +69,28 @@ export async function POST(req) {
   }
 }
 
-// DELETE — smaze screenshot (auth token v Authorization header, NIKDY v URL)
+// DELETE — smaze screenshot
 export async function DELETE(req) {
   try {
-    const authToken = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''
+    const session = await requireSession(req)
+    if (!session.ok) {
+      return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    }
+
     const { searchParams } = new URL(req.url)
     const sessionId = searchParams.get('sessionId')
     const slotId = searchParams.get('slotId')
 
-    if (!verifySessionToken(authToken)) {
-      return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } })
-    }
     if (!sessionId || !slotId || !/^[a-zA-Z0-9]{8,64}$/.test(sessionId) || !/^[a-zA-Z0-9]{1,30}$/.test(slotId)) {
-      return new Response(JSON.stringify({ error: 'Neplatne ID' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } })
+      return new Response(JSON.stringify({ error: 'Neplatne ID' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
     }
 
     const filename = `screenshots/${sessionId}/${slotId}.jpg`
     try { await del(filename) } catch {}
 
-    return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } })
+    return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } })
   } catch (e) {
     console.error('[UPLOAD-SCREENSHOT] Delete error:', e.message)
-    return new Response(JSON.stringify({ error: 'Chyba pri mazani' }), { status: 500, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } })
+    return new Response(JSON.stringify({ error: 'Chyba pri mazani' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
   }
 }

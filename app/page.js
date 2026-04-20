@@ -263,8 +263,6 @@ function renderLine(line, i) {
   return <div key={i} style={{color:'#ccc',marginTop:'6px',fontSize:'15px',fontFamily:'Arial,sans-serif',lineHeight:'1.7'}}>{parseInline(line)}</div>
 }
 
-const AUTH_KEY = 'kris_auth_token'
-
 export default function Home() {
   var [clientUrl, setClientUrl] = useState('')
   var [loading, setLoading] = useState(false)
@@ -276,7 +274,8 @@ export default function Home() {
   var [history, setHistory] = useState([])
   var [totalSeconds, setTotalSeconds] = useState(null)
   var [copied, setCopied] = useState(false)
-  var [authToken, setAuthToken] = useState(null)
+  var [authenticated, setAuthenticated] = useState(false)
+  var [authChecking, setAuthChecking] = useState(true)
   var [authCode, setAuthCode] = useState('')
   var [authError, setAuthError] = useState('')
   var [authLoading, setAuthLoading] = useState(false)
@@ -299,29 +298,18 @@ export default function Home() {
     try {
       var saved = localStorage.getItem(HISTORY_KEY)
       if (saved) setHistory(JSON.parse(saved))
-      var token = localStorage.getItem(AUTH_KEY)
-      if (token) {
-        // Overeni veku tokenu (format: timestamp.signature)
-        var parts = token.split('.')
-        if (parts.length === 2) {
-          var ts = parseInt(parts[0])
-          var age = Date.now() - ts
-          if (isNaN(age) || age > 24 * 60 * 60 * 1000 || age < 0) {
-            localStorage.removeItem(AUTH_KEY)
-            return
-          }
-        } else {
-          localStorage.removeItem(AUTH_KEY)
-          return
-        }
-        setAuthToken(token)
-      }
     } catch(e) {}
+    // Cookie session check — cookie je HttpOnly, nemuze byt cteno z JS
+    fetch('/api/auth', { method: 'GET' })
+      .then(function(r) { return r.json() })
+      .then(function(d) { setAuthenticated(!!(d && d.authenticated)) })
+      .catch(function() { setAuthenticated(false) })
+      .finally(function() { setAuthChecking(false) })
   }, [])
 
-  // Fetch signed URLs kdyz se zobrazi galerie (token NIKDY v URL)
+  // Fetch signed URLs kdyz se zobrazi galerie (auth pres cookie)
   useEffect(function() {
-    if (!viewingGallery || !viewingGallery.slots.length || !authToken) {
+    if (!viewingGallery || !viewingGallery.slots.length || !authenticated) {
       setGalleryUrls({})
       return
     }
@@ -329,15 +317,15 @@ export default function Home() {
     fetch('/api/screenshot-urls', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: authToken, sessionId: viewingGallery.sessionId, slots: viewingGallery.slots })
+      body: JSON.stringify({ sessionId: viewingGallery.sessionId, slots: viewingGallery.slots })
     }).then(function(r) {
-      if (r.status === 401) { localStorage.removeItem(AUTH_KEY); setAuthToken(''); return }
+      if (r.status === 401) { setAuthenticated(false); return }
       return r.json()
     }).then(function(data) {
       if (!cancelled && data && data.urls) setGalleryUrls(data.urls)
     }).catch(function() {})
     return function() { cancelled = true }
-  }, [viewingGallery, authToken])
+  }, [viewingGallery, authenticated])
 
   async function handleAuth() {
     if (!authCode.trim() || authCode.length !== 6) return
@@ -351,8 +339,7 @@ export default function Home() {
       })
       var data = await res.json()
       if (data.ok) {
-        setAuthToken(data.token)
-        localStorage.setItem(AUTH_KEY, data.token)
+        setAuthenticated(true)
         setAuthCode('')
       } else {
         setAuthError(data.error || 'Neplatny kod')
@@ -361,6 +348,17 @@ export default function Home() {
       setAuthError('Chyba spojeni')
     }
     setAuthLoading(false)
+  }
+
+  async function handleLogout() {
+    try { await fetch('/api/auth', { method: 'DELETE' }) } catch(e) {}
+    setAuthenticated(false)
+    setAnalysis('')
+    setDisplayUrl('')
+    setHistory([])
+    setViewingGallery(null)
+    setGalleryUrls({})
+    try { localStorage.removeItem(HISTORY_KEY) } catch(e) {}
   }
 
   useEffect(function() {
@@ -399,13 +397,12 @@ export default function Home() {
       fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight', authToken: authToken }),
+        body: JSON.stringify({ clientUrl: fetchUrl, action: 'preflight' }),
       })
         .then(function(res) {
           if (res.status === 401) {
-            setAuthToken(null)
-            localStorage.removeItem(AUTH_KEY)
-            setError('Token vyprsel, prihlas se znovu')
+            setAuthenticated(false)
+            setError('Session vyprsela, prihlas se znovu')
             setPreflightLoading(false)
             return null
           }
@@ -477,12 +474,11 @@ export default function Home() {
       var res = await fetch('/api/upload-screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authToken: authToken, sessionId: sid, slotId: targetSlot, base64: base64 }),
+        body: JSON.stringify({ sessionId: sid, slotId: targetSlot, base64: base64 }),
       })
       if (res.status === 401) {
-        setAuthToken(null)
-        localStorage.removeItem(AUTH_KEY)
-        setError('Token vyprsel, prihlas se znovu')
+        setAuthenticated(false)
+        setError('Session vyprsela, prihlas se znovu')
         setScreenshots({})
         setSessionId('')
         return
@@ -534,7 +530,6 @@ export default function Home() {
       try {
         await fetch('/api/upload-screenshot?sessionId=' + encodeURIComponent(sessionId) + '&slotId=' + encodeURIComponent(slotId), {
           method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + authToken },
         })
       } catch (e) {}
     }
@@ -588,14 +583,13 @@ export default function Home() {
       var res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: url, authToken: authToken, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
+        body: JSON.stringify({ clientUrl: url, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
       })
 
       if (!res.ok || !res.body) {
         var errData = await res.json().catch(function() { return { error: 'Chyba serveru' } })
         if (res.status === 401) {
-          setAuthToken(null)
-          localStorage.removeItem(AUTH_KEY)
+          setAuthenticated(false)
         }
         setError('Chyba: ' + (errData.error || res.status))
         setLoading(false)
@@ -666,7 +660,7 @@ export default function Home() {
             <h2 style={{fontSize:'16px',fontWeight:'700',color:'#FF6B00',margin:'0',textTransform:'uppercase',letterSpacing:'3px'}}>Trzbě a marzi Zdar!</h2>
           </div>
 
-          {!authToken && (
+          {!authChecking && !authenticated && (
             <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px',textAlign:'center'}}>
               <div style={{fontSize:'15px',fontWeight:'700',color:'white',marginBottom:'8px'}}>Pristup chraneny</div>
               <p style={{color:'#888',fontSize:'13px',fontFamily:'Arial,sans-serif',marginTop:'0',marginBottom:'20px'}}>Zadej 6-mistny kod z Authenticator aplikace</p>
@@ -693,7 +687,8 @@ export default function Home() {
             </div>
           )}
 
-          {authToken && <div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px'}}>
+          {authenticated &&<div className="no-print" style={{background:'#1a1a1a',border:'2px solid #FF6B00',borderRadius:'16px',padding:'32px',marginBottom:'32px',position:'relative'}}>
+            <button onClick={handleLogout} style={{position:'absolute',top:'12px',right:'12px',padding:'6px 12px',fontSize:'11px',fontWeight:'700',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'6px',cursor:'pointer',textTransform:'uppercase',letterSpacing:'1px'}}>Odhlasit</button>
             <p style={{color:'#888',fontSize:'14px',marginTop:'0',marginBottom:'20px',textAlign:'center',fontFamily:'Arial,sans-serif'}}>
               Zadej web klienta a AI agent vygeneruje CRO analyzu podle metodologie ESHOP BOOSTER
             </p>
@@ -805,14 +800,14 @@ export default function Home() {
             {loading && <LoadingAnimation seconds={seconds} phase={LOADING_PHASES[phaseIndex]} />}
           </div>}
 
-          {authToken && history.length > 0 && !loading && !analysis && (
+          {authenticated &&history.length > 0 && !loading && !analysis && (
             <div className="no-print" style={{background:'#1a1a1a',border:'1px solid #2a2a2a',borderRadius:'12px',padding:'20px',marginBottom:'32px'}}>
               <div style={{color:'#666',fontSize:'12px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',marginBottom:'14px',fontFamily:'Arial,sans-serif'}}>Posledni analyzy</div>
               {history.map(function(item) { return <HistoryItem key={item.id} item={item} onOpen={openFromHistory} onDelete={deleteFromHistory} /> })}
             </div>
           )}
 
-          {authToken && analysis && (
+          {authenticated &&analysis && (
             <div className="print-area" style={{background:'#1a1a1a',border:'2px solid #333',borderRadius:'16px',padding:'32px'}}>
               <div className="no-print" style={{display:'flex',justifyContent:'flex-end',marginBottom:'16px'}}>
                 <button onClick={handleNovaAnalyza} style={{padding:'8px 16px',fontSize:'12px',fontWeight:'700',background:'transparent',border:'1px solid #333',color:'#555',borderRadius:'8px',cursor:'pointer'}}>Nova analyza</button>
@@ -868,7 +863,7 @@ export default function Home() {
             </div>
           )}
 
-          {authToken && (
+          {authenticated &&(
             <p className="no-print" style={{textAlign:'center',color:'#333',fontSize:'12px',marginTop:'24px',fontFamily:'Arial,sans-serif'}}>
               ESHOP BOOSTER 2026 &bull; KRIS v6 &bull; Ruslan Skopal
             </p>

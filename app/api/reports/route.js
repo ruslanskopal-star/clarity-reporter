@@ -1,19 +1,20 @@
-// API pro ukládání a čtení CRO reportů (Vercel Blob storage)
+// API pro ukládání a čtení CRO reportů (auth pres HttpOnly cookie)
 import { put, list, del, get } from '@vercel/blob'
-import { verifySessionToken } from '../../lib/auth.js'
+import { requireSession } from '../../lib/auth.js'
 
 export const runtime = 'nodejs'
 
 // POST — uloží nový report
 export async function POST(req) {
   try {
-    const { url, analysis, mode, score, withClarity, seconds, authToken } = await req.json()
-
+    const session = await requireSession(req)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!verifySessionToken(authToken)) {
+    if (!session.ok) {
       console.warn(`[REPORTS] UNAUTHORIZED POST ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
+
+    const { url, analysis, mode, score, withClarity, seconds } = await req.json()
 
     if (!url || !analysis) {
       return new Response(JSON.stringify({ error: 'Chybí url nebo analysis' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -52,16 +53,14 @@ export async function POST(req) {
 // GET — seznam reportů (volitelně ?hostname=eppi.cz)
 export async function GET(req) {
   try {
-    // Auth z query stringu nebo headeru
-    const { searchParams } = new URL(req.url)
-    const authToken = searchParams.get('token') || req.headers.get('authorization')?.replace('Bearer ', '')
+    const session = await requireSession(req)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-
-    if (!verifySessionToken(authToken)) {
+    if (!session.ok) {
       console.warn(`[REPORTS] UNAUTHORIZED GET ip=${ip}`)
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
+    const { searchParams } = new URL(req.url)
     const hostname = searchParams.get('hostname')
     console.log(`[REPORTS] GET ip=${ip} hostname=${hostname || 'all'}`)
     const prefix = hostname ? `reports/${hostname}/` : 'reports/'
@@ -94,13 +93,12 @@ export async function GET(req) {
 // DELETE — smazání reportu
 export async function DELETE(req) {
   try {
-    const { searchParams } = new URL(req.url)
-    const authToken = searchParams.get('token') || req.headers.get('authorization')?.replace('Bearer ', '')
-
-    if (!verifySessionToken(authToken)) {
+    const session = await requireSession(req)
+    if (!session.ok) {
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
+    const { searchParams } = new URL(req.url)
     const blobUrl = searchParams.get('blobUrl')
     if (!blobUrl) {
       return new Response(JSON.stringify({ error: 'Chybi blobUrl' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
