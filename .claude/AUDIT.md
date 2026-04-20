@@ -6,9 +6,12 @@
 ---
 
 ## Poslední audit
-- **Datum:** 2026-04-09
-- **Výsledek:** 3 CRITICAL + 4 HIGH opraveno, vše čisté
-- **Další plánovaný:** 2026-04-16
+- **Datum:** 2026-04-20 (externi hacker audit + oprava)
+- **Výsledek:** C1/C2/C3/H1/H2/H3/H4/M1/M2/M3/M4/L1/L2/L3 opraveno
+  - Auth: HMAC token → random 32B + Redis session store + UA binding
+  - Token: localStorage → HttpOnly Secure SameSite=Strict cookie
+  - CSP, Cache-Control private, robots.txt, SSRF expand, upload limits, CORS explicit
+- **Další plánovaný:** 2026-04-27
 
 ## Mezi audity: změny architektury (2026-04-11, v28)
 - Přidány 2 nové endpointy: `/api/upload-screenshot` (POST + DELETE), `/api/screenshot` (GET)
@@ -35,8 +38,10 @@
 grep -rn "error: e\.message\|error:.*err\b" app/api/ | grep -v console
 ```
 
-### HMAC porovnání
-- `app/lib/auth.js` — musí používat `timingSafeEqual`, nikdy `===`
+### Session verify
+- `app/lib/auth.js` — `verifySession` cte z Redis (atomic lookup + UA check)
+- Random 32B token z `crypto.randomBytes` (ne HMAC-signed timestamp)
+- Pouzij `requireSession(req)` v route handlers, NIKDY token v body/query
 
 ### Input validace
 - `app/api/analyze/route.js` — clientUrl: typ, délka (max 200), URL schema (jen http/https), blokované interní adresy
@@ -50,10 +55,15 @@ grep -rn "error: e\.message\|error:.*err\b" app/api/ | grep -v console
 ### Rate limiting
 - Auth: 5 pokusů / 15 min per IP
 - Analyze: 10 / h per IP (jen plná analýza, ne preflight)
+- Upload: 200 / h per IP
+- Per-session: 30 screenshotu / session (2h TTL)
 
 ### Headers
-- HSTS, X-Frame-Options DENY, nosniff, XSS, Permissions-Policy
-- CORS jen na cro-report.vercel.app
+- HSTS 2 roky + preload, X-Frame-Options DENY, nosniff, Permissions-Policy
+- CSP: default-src 'self', connect-src 'self', frame-ancestors 'none'
+- Cross-Origin-Opener-Policy: same-origin
+- Cache-Control: private, no-store na /api/* + Vary: Authorization
+- CORS explicitni origin (ne *) i pro /(.*)
 
 ### Secrets
 - Žádné secrets v kódu nebo gitu

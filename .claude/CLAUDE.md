@@ -269,15 +269,31 @@ Podklad pro klienta (majitel nebo manažer e-shopu). Srozumitelný bez technick�
 ## Byznys cíl
 Rychlá identifikace TOP příležitostí pro zvýšení konverzí/obratu. Akční plán s měřitelným dopadem, ne akademická analýza.
 
-## Zabezpečení (v27)
+## Zabezpečení (po hacker auditu, 2026-04-20)
 Kompletni pravidla viz @SECURITY.md
-- **Auth**: TOTP (Google Authenticator) → HMAC session token (24h)
-- **Rate limit**: Upstash Redis (upstash-kv-teal-apple) — 5 auth/15min, 10 analýz/h per IP
+- **Auth**: TOTP (Google Authenticator) → random 32B session token v Upstash Redis (24h TTL)
+- **Cookie**: HttpOnly + Secure + SameSite=Strict, klient token nevidi
+- **Session binding**: UA hash (SHA256 first 32 hex) — krádež cookie na jiny browser neplatna
+- **Rate limit**: Upstash Redis (upstash-kv-teal-apple) — 5 auth/15min, 10 analýz/h, 200 uploadu/h per IP
+- **Per-session limit**: 30 screenshotu per sessionId (2h TTL)
 - **Storage**: Vercel Blob private (kris-reports-private, fra1) — přímé URL = 403
-- **Headers**: HSTS, X-Frame-Options DENY, nosniff, XSS protection, Permissions-Policy
-- **CORS**: jen cro-report.vercel.app
-- **Logování**: IP + akce na /api/auth, /api/analyze, /api/reports
-- **Sdílený modul**: app/lib/auth.js (createSessionToken, verifySessionToken, checkAuthRateLimit, checkAnalyzeRateLimit)
+- **Screenshot URLs**: signed (HMAC sig + expires 15min) — session token NIKDY v URL
+- **Headers**: HSTS 2 roky + preload, X-Frame-Options DENY, nosniff, Permissions-Policy, Cross-Origin-Opener-Policy
+- **CSP**: default-src 'self', connect-src 'self', frame-ancestors 'none', object-src 'none'
+- **Cache-Control**: private, no-store na vsech /api/* + Vary: Authorization
+- **CORS**: jen cro-report.vercel.app (explicitni i pro /(.*) )
+- **SSRF**: localhost, RFC1918, 169.254/16, 172.16-31/12, CGNAT, IPv6 ULA/link-local
+- **Input validace**: TOTP presne 6 cislic, magic-number check screenshotu (JPEG/PNG/WebP)
+- **Logování**: IP + akce na /api/auth, /api/analyze, /api/reports, /api/upload-screenshot
+- **401 hlasky**: jednotne "Neautorizovany pristup" (nerozlisuje expired vs missing)
+- **robots.txt**: Disallow /
+- **Sdílený modul**: app/lib/auth.js
+  - `createSession(uaHash)` / `verifySession(token, uaHash)` / `destroySession(token)`
+  - `requireSession(req)` — helper pro route handlers (cte cookie)
+  - `hashUA(userAgent)`, `SESSION_COOKIE`, `SESSION_COOKIE_OPTS`
+  - `checkAuthRateLimit(ip)` / `checkAnalyzeRateLimit(ip)` / `checkUploadRateLimit(ip)`
+  - `incrementSessionSlots(sessionId)` — per-session slot counter
+  - `createScreenshotSignature` / `verifyScreenshotSignature` — signed URLs
 
 ## Env vars na Vercelu
 ANTHROPIC_API_KEY, RESEND_API_KEY, CRON_SECRET, KRIS_REPORT_EMAIL,
