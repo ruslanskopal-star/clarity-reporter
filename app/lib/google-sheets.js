@@ -6,13 +6,16 @@ const PROJECT_NUMBER = '251861487049'
 const POOL_ID = 'vercel-pool'
 const PROVIDER_ID = 'vercel-oidc'
 const SERVICE_ACCOUNT = 'cro-report-reader@cro-report-sheets.iam.gserviceaccount.com'
-const SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly'
+const SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets.readonly',
+  'https://www.googleapis.com/auth/documents.readonly',
+]
 
 let cachedToken = null
 let cachedAt = 0
 const TOKEN_TTL_MS = 50 * 60 * 1000 // GCP access tokens platneji 1h, refresh po 50 min
 
-async function getAccessToken() {
+export async function getAccessToken() {
   if (cachedToken && Date.now() - cachedAt < TOKEN_TTL_MS) return cachedToken
 
   // Token prichazi z request headeru x-vercel-oidc-token (ne env var)
@@ -53,7 +56,7 @@ async function getAccessToken() {
       'Authorization': `Bearer ${federatedToken}`,
     },
     body: JSON.stringify({
-      scope: [SCOPE],
+      scope: SCOPES,
       lifetime: '3600s',
     }),
   })

@@ -353,7 +353,9 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Neautorizovany pristup' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
     }
 
-    const { clientUrl, reportMode, shopContext, action, sessionId } = await req.json()
+    const { clientUrl, reportMode, shopContext, action, sessionId, model } = await req.json()
+    const ALLOWED_MODELS = new Set(['claude-sonnet-4-6', 'claude-opus-4-7'])
+    const selectedModel = ALLOWED_MODELS.has(model) ? model : 'claude-sonnet-4-6'
 
     console.log(`[ANALYZE] ${action === 'preflight' ? 'PREFLIGHT' : 'START'} ip=${ip} url=${clientUrl}`)
 
@@ -691,7 +693,7 @@ Identifikuj kategorii produktu. Bud maximalne konkretni pro TENTO e-shop. NIKDY 
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: selectedModel,
         max_tokens: 8000,
         stream: true,
         system: systemPrompt,

@@ -287,6 +287,7 @@ export default function Home() {
   var [detectedCategory, setDetectedCategory] = useState('')
   var [screenshots, setScreenshots] = useState({}) // { slotId: { thumb: base64, status: 'uploading'|'ok'|'error' } }
   var [sessionId, setSessionId] = useState('')
+  var [model, setModel] = useState('claude-sonnet-4-6')
   var [viewingGallery, setViewingGallery] = useState(null) // {sessionId, slots}
   var [galleryUrls, setGalleryUrls] = useState({}) // { slot: signedUrl }
   var timerRef = useRef(null)
@@ -583,7 +584,7 @@ export default function Home() {
       var res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientUrl: url, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId }),
+        body: JSON.stringify({ clientUrl: url, shopContext: { segment: shopSegment, obrat: shopObrat, problem: shopProblem }, sessionId: sessionId, model: model }),
       })
 
       if (!res.ok || !res.body) {
@@ -709,6 +710,25 @@ export default function Home() {
               >
                 {loading ? 'Analyzuji...' : 'Spustit'}
               </button>
+            </div>
+
+            <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}}>
+              <span style={{color:'#555',fontSize:'11px',fontWeight:'700',letterSpacing:'2px',textTransform:'uppercase',fontFamily:'Arial,sans-serif'}}>Model</span>
+              <button
+                onClick={function() { setModel('claude-sonnet-4-6') }}
+                disabled={loading}
+                style={{padding:'6px 12px',fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'1px',background:model==='claude-sonnet-4-6'?'#FF6B00':'transparent',color:model==='claude-sonnet-4-6'?'white':'#888',border:'1px solid '+(model==='claude-sonnet-4-6'?'#FF6B00':'#333'),borderRadius:'6px',cursor:loading?'not-allowed':'pointer',fontFamily:'Arial,sans-serif'}}
+              >
+                Rychla (Sonnet 4.6)
+              </button>
+              <button
+                onClick={function() { setModel('claude-opus-4-7') }}
+                disabled={loading}
+                style={{padding:'6px 12px',fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'1px',background:model==='claude-opus-4-7'?'#FF6B00':'transparent',color:model==='claude-opus-4-7'?'white':'#888',border:'1px solid '+(model==='claude-opus-4-7'?'#FF6B00':'#333'),borderRadius:'6px',cursor:loading?'not-allowed':'pointer',fontFamily:'Arial,sans-serif'}}
+              >
+                Hluboka (Opus 4.7)
+              </button>
+              <span style={{color:'#444',fontSize:'10px',fontFamily:'Arial,sans-serif'}}>{model==='claude-opus-4-7'?'~5x drazsi, hlubsi analyza':'standard'}</span>
             </div>
 
             {(preflightLoading || preflightDone) && (
